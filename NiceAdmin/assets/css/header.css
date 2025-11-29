@@ -1,0 +1,100 @@
+  /* --- CSS CHUNG --- */
+      .table td { vertical-align: middle; }
+      .action-col { width: 120px; text-align: center; }
+      
+      #headerAvatar {
+          width: 36px; height: 36px; object-fit: cover;
+          border-radius: 50%; border: 1px solid #e0e0e0;
+      }
+
+      /* --- CSS THANH TÌM KIẾM (1 KHUNG DUY NHẤT) --- */
+      .search-bar {
+          min-width: 360px;
+          padding: 0 20px;
+      }
+
+      /* Đây là KHUNG DUY NHẤT bao quanh */
+      .search-form {
+          width: 100%;
+          border: 1px solid rgba(1, 41, 112, 0.2);
+          padding: 0px 10px;
+          border-radius: 4px;
+          display: flex;
+          align-items: center;
+          background-color: #fff;
+          transition: 0.3s;
+      }
+
+      /* Hiệu ứng focus vào khung */
+      .search-form:focus-within {
+          border-color: #0d6efd;
+          box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.1);
+      }
+
+      /* Input: Xóa sạch viền và shadow để không hiện khung thứ 2 */
+      .search-form input {
+          border: none !important;
+          outline: none !important;
+          box-shadow: none !important;
+          padding: 4px 8px;
+          width: 100%;
+          background: transparent;
+          color: #012970;
+          font-size: 14px;
+      }
+
+      /* Nút Tìm kiếm */
+      .search-form button[title="Search"] {
+          border: 0;
+          padding: 0;
+          margin-left: 8px;
+          background: transparent;
+          color: #012970;
+          display: flex;
+          align-items: center;
+      }
+
+      /* Nút Xóa (X) */
+      #btnClearSearch {
+          border: none;
+          background: transparent;
+          
+          font-size: 10px;
+          padding: 0 5px;
+          display: flex;
+          align-items: center;
+          cursor: pointer;
+          transition: 0.2s;
+      }
+      #btnClearSearch:hover { 
+          transform: scale(1.2); 
+          color: #dc3545;
+      }
+
+      /* --- DARK MODE STYLES --- */
+      body.dark-mode { background-color: #1a1a2e; color: #e0e0e0; }
+      
+      body.dark-mode .header { background-color: #16213e; box-shadow: 0px 2px 20px rgba(0, 0, 0, 0.4); }
+      
+      /* Dark mode cho Search Bar */
+      body.dark-mode .search-form { border-color: #444; background-color: #16213e; }
+      body.dark-mode .search-form input { color: #e0e0e0; }
+      body.dark-mode .search-form button[title="Search"] { color: #a5c5ff; }
+      
+      /* Các thành phần khác */
+      body.dark-mode .sidebar { background-color: #16213e; }
+      body.dark-mode .card { background-color: #16213e; color: #fff; border: 1px solid #2c3e50; }
+      body.dark-mode .card-title { color: #a5c5ff; }
+      body.dark-mode .form-control, body.dark-mode .form-select { background-color: #0f3460; border-color: #2c3e50; color: #fff; }
+      body.dark-mode .table { color: #e0e0e0; border-color: #2c3e50; }
+      body.dark-mode .table-light th { background-color: #0f3460; color: #fff; border-color: #2c3e50; }
+      body.dark-mode .table-hover tbody tr:hover { color: #fff; background-color: #2c3e50; }
+      body.dark-mode .nav-link { color: #a5c5ff; }
+      body.dark-mode .nav-link.collapsed { color: #e0e0e0; background-color: transparent; }
+      body.dark-mode .sidebar-nav .nav-content a { color: #e0e0e0; }
+      body.dark-mode .logo span { color: #fff; }
+      body.dark-mode .modal-content { background-color: #1a1a2e; border: 1px solid #444; }
+      body.dark-mode .dropdown-menu { background-color: #16213e; border: 1px solid #444; }
+      body.dark-mode .dropdown-item { color: #e0e0e0; }
+      body.dark-mode .dropdown-item:hover { background-color: #0f3460; }
+      body.dark-mode .dropdown-header h6 { color: #fff; }

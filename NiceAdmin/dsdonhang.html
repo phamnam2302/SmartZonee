@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <title>Danh sách Đơn hàng - Smart Zone</title>
+  
+  <link href="assets/img/favicon.png" rel="icon">
+  <link href="assets/img/apple-touch-icon.png" rel="apple-touch-icon">
+  <link href="https://fonts.gstatic.com" rel="preconnect">
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Nunito:300,300i,400,400i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i" rel="stylesheet">
+  <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+  <link href="assets/vendor/boxicons/css/boxicons.min.css" rel="stylesheet">
+  <link href="assets/vendor/simple-datatables/style.css" rel="stylesheet">
+  <link href="assets/css/style.css" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+  <style>
+    /* --- CSS CHUNG & TỐI ƯU NHỎ GỌN --- */
+    /* Thu nhỏ thanh tìm kiếm */
+    .search-bar { min-width: 320px; padding: 0 15px; }
+    .search-form { width: 100%; border: 1px solid rgba(1, 41, 112, 0.2); padding: 3px 8px; /* Giảm padding */ border-radius: 4px; display: flex; align-items: center; background-color: #fff; transition: 0.3s; }
+    .search-form:focus-within { border-color: #0d6efd; box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.1); }
+    .search-form input { border: none !important; outline: none !important; box-shadow: none !important; padding: 4px 8px; width: 100%; background: transparent; color: #012970; font-size: 13.5px; /* Chữ nhỏ hơn chút */ }
+    .search-form button { border: 0; background: transparent; color: #012970; margin-left: 8px; }
+    
+    /* Dark Mode (Giữ nguyên) */
+    body.dark-mode { background-color: #111; color: #eee; }
+    body.dark-mode .card, body.dark-mode .header, body.dark-mode .sidebar, body.dark-mode .modal-content { background-color: #1a1a1a; color: #eee; border-color: #333; }
+    body.dark-mode .form-control, body.dark-mode .form-select { background-color: #2a2a2a; border-color: #444; color: #eee; }
+    body.dark-mode .table { color: #eee; border-color: #333; }
+    body.dark-mode .table-light th { background-color: #2a2a2a; color: #eee; border-color: #333; }
+    body.dark-mode .table-hover tbody tr:hover { color: #fff; background-color: #333; }
+    body.dark-mode .search-form { background-color: #1a1a1a; border-color: #444; }
+    body.dark-mode .search-form input { color: #eee; }
+    body.dark-mode .search-form button { color: #eee; }
+    body.dark-mode .bg-light { background-color: #2a2a2a !important; color: #eee; }
+
+    /* Table Logic Compact */
+    /* Sử dụng align-middle cho bảng compact */
+    .table.align-middle td { vertical-align: middle; } 
+    .action-col { white-space: nowrap; width: 90px; text-align: center; }
+    .order-table input, .order-table select { border: none; background: transparent; width: 100%; text-align: center; }
+    .del-row-btn { color: #dc3545; cursor: pointer; font-size: 1.1rem; }
+    
+    /* --- TRẠNG THÁI: ĐẬM, TƯƠI & NHỎ GỌN HƠN --- */
+    
+    /* 1. Badge (Chỉ xem) - Compact */
+    .badge-status { 
+        padding: 6px 4px; /* Giảm padding */
+        border-radius: 4px; /* Bo góc vuông hơn chút */
+        font-weight: 700; 
+        font-size: 0.8rem; /* Font nhỏ hơn */
+        color: #fff; 
+        display: inline-block; 
+        width: 145px; /* Giảm độ rộng cố định */
+        text-align: center;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    /* 2. Select (Cho phép sửa) - Compact */
+    .status-wrapper { position: relative; display: inline-block; }
+    .status-select {
+        padding: 5px 25px 5px 5px; /* Giảm padding để nhỏ gọn */
+        font-size: 0.8rem; 
+        border-radius: 4px; 
+        border: 1px solid rgba(255,255,255,0.4); 
+        cursor: pointer; 
+        width: 145px; /* Độ rộng bằng badge */
+        font-weight: 700; 
+        color: #fff;
+        appearance: none; -webkit-appearance: none; -moz-appearance: none;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.15); 
+        text-align: center; text-align-last: center;
+        transition: all 0.2s;
+        /* Mũi tên trắng mặc định cho nền đậm */
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='white' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+        background-repeat: no-repeat; background-position: right 8px center; background-size: 10px;
+    }
+    .status-select:hover { filter: brightness(1.1); transform: translateY(-1px); }
+    .status-select:focus { outline: none; box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.3); }
+    
+    /* --- BẢNG MÀU MỚI: ĐẬM & TƯƠI (VIVID & BOLD) --- */
+    /* Tất cả đều dùng chữ trắng để nổi bật trên nền đậm */
+    
+    /* Chờ xử lý: Cam đậm tươi (Vivid Orange/Deep Amber) */
+    .st-cho-xu-ly { background-color: #f57c00 !important; border-color: #e65100 !important; color: #fff !important; } 
+    
+    /* Đang giao: Xanh dương đậm tươi (Vivid Blue) */
+    .st-dang-giao { background-color: #0091ea !important; border-color: #006064 !important; color: #fff !important; } 
+    
+    /* Hoàn thành: Xanh lá đậm tươi (Vivid Green) */
+    .st-hoan-thanh { background-color: #00c853 !important; border-color: #1b5e20 !important; color: #fff !important; } 
+    
+    /* Đã hủy: Đỏ đậm tươi (Vivid Red) */
+    .st-da-huy { background-color: #d50000 !important; border-color: #b71c1c !important; color: #fff !important; }
+
+    /* Override màu chữ trong dropdown option để dễ đọc */
+    .status-select option { background-color: #fff; color: #000; padding: 8px; font-weight: normal; }
+    
+    #headerAvatar { width: 36px; height: 36px; object-fit: cover; border-radius: 50%; border: 1px solid #e0e0e0; }
+    
+    /* Tinh chỉnh tiêu đề card nhỏ lại chút */
+    .card-title { font-size: 1.1rem; padding: 15px 0 10px 0; }
+  </style>
+</head>
+
+<body>
+
+  <header id="header" class="header fixed-top d-flex align-items-center">
+    <div class="d-flex align-items-center justify-content-between">
+      <a href="index.html" class="logo d-flex align-items-center">
+        <img src="assets/img/logo.png" alt="">
+        <span class="d-none d-lg-block">Smart Zone</span>
+      </a>
+      <i class="bi bi-list toggle-sidebar-btn"></i>
+    </div>
+    
+    <div class="search-bar">
+      <form class="search-form d-flex align-items-center" onsubmit="event.preventDefault(); searchOrders();">
+        <input type="text" id="searchInput" name="query" placeholder="Tìm Mã ĐH hoặc Tên KH..." oninput="toggleClearBtn()">
+        <button type="button" id="btnClearSearch" class="d-none" onclick="clearSearch()" title="Xóa tìm kiếm" style="margin-right: 5px;"><i class="bi bi-x-lg"></i></button>
+        <button type="button" onclick="searchOrders()"><i class="bi bi-search"></i></button>
+      </form>
+    </div>
+
+    <nav class="header-nav ms-auto">
+      <ul class="d-flex align-items-center">
+        <li class="nav-item d-block d-lg-none"><a class="nav-link nav-icon search-bar-toggle " href="#"><i class="bi bi-search"></i></a></li>
+        <li class="nav-item dropdown pe-3">
+          <a class="nav-link nav-profile d-flex align-items-center pe-0" href="#" data-bs-toggle="dropdown">
+            <img src="assets/img/profile-img.jpg" alt="Profile" class="rounded-circle" id="headerAvatar">
+            <span class="d-none d-md-block dropdown-toggle ps-2" id="headerName">Admin</span>
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow profile">
+             <li class="dropdown-header"><h6 id="headerFullName">Quản trị viên</h6><span id="headerRole">Quản lý kho</span></li>
+             <li><hr class="dropdown-divider"></li>
+             <li><a class="dropdown-item d-flex align-items-center" href="#" onclick="showUserProfile()"><i class="bi bi-person"></i><span>Hồ sơ của bạn</span></a></li>
+             <li><hr class="dropdown-divider"></li>
+             <li><a class="dropdown-item d-flex align-items-center" href="#" onclick="openSettingsModal()"><i class="bi bi-gear"></i><span>Cài đặt hiển thị</span></a></li>
+             <li><hr class="dropdown-divider"></li>
+             <li><a class="dropdown-item d-flex align-items-center" href="#" onclick="logout()"><i class="bi bi-box-arrow-right"></i><span>Đăng xuất</span></a></li>
+          </ul>
+        </li>
+      </ul>
+    </nav>
+  </header>
+
+  <aside id="sidebar" class="sidebar">
+    <ul class="sidebar-nav" id="sidebar-nav">
+      <li class="nav-item" id="menu-thongke"><a class="nav-link collapsed" href="index.html"><i class="bi bi-grid"></i><span>Thống kê</span></a></li>
+      <li class="nav-item" id="menu-hanghoa"><a class="nav-link collapsed" data-bs-target="#hanghoa-nav" data-bs-toggle="collapse" href="#"><i class="bi bi-box-seam"></i><span>Quản lý Hàng hóa</span><i class="bi bi-chevron-down ms-auto"></i></a><ul id="hanghoa-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav"><li><a href="dsdanhmuc.html"><i class="bi bi-circle"></i>Danh sách Danh mục</a></li><li><a href="dssanpham.html"><i class="bi bi-circle"></i>Danh sách Sản phẩm</a></li></ul></li>
+      <li class="nav-item" id="menu-kho"><a class="nav-link collapsed" data-bs-target="#kho-nav" data-bs-toggle="collapse" href="#"><i class="bi bi-house-door"></i><span>Quản lý Kho hàng</span><i class="bi bi-chevron-down ms-auto"></i></a><ul id="kho-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav"><li><a href="dsphieunhap.html"><i class="bi bi-circle"></i>Danh sách Phiếu Nhập</a></li><li><a href="dsphieuxuat.html"><i class="bi bi-circle"></i>Danh sách Phiếu Xuất</a></li><li><a href="tonkho.html"><i class="bi bi-circle"></i>Thống kê Tồn kho</a></li></ul></li>
+      <li class="nav-item" id="menu-donhang"><a class="nav-link" href="dsdonhang.html"><i class="bi bi-cart-check"></i><span>Quản lý Đơn hàng</span></a></li>
+      <li class="nav-item" id="menu-khachhang"><a class="nav-link collapsed" href="dskhachhang.html"><i class="bi bi-people"></i><span>Quản lý Khách hàng</span></a></li>
+      <li class="nav-item" id="menu-ncc"><a class="nav-link collapsed" href="dsnhacungcap.html"><i class="bi bi-truck"></i><span>Quản lý Nhà cung cấp</span></a></li>
+      <li class="nav-item" id="menu-account"><a class="nav-link collapsed" href="dsnguoidung.html"><i class="bi bi-person-gear"></i><span id="label-account">Quản lý Tài khoản</span></a></li>
+      <li class="nav-item" id="menu-role"><a class="nav-link collapsed" href="dsvaitro.html"><i class="bi bi-shield-lock"></i><span>Quản lý Vai trò</span></a></li>
+    </ul>
+  </aside>
+
+  <main id="main" class="main">
+    <div class="pagetitle mb-2"> <h1>Danh sách Đơn hàng</h1>
+      <nav>
+        <ol class="breadcrumb" style="font-size: 0.9rem;">
+          <li class="breadcrumb-item"><a href="index.html">Trang chủ</a></li>
+          <li class="breadcrumb-item active">Đơn hàng</li>
+        </ol>
+      </nav>
+    </div>
+
+    <section class="section">
+      <div class="row">
+        <div class="col-lg-12">
+          <div class="card mb-2"> <div class="card-body p-2"> <div class="d-flex justify-content-between align-items-center">
+                
+                <div class="d-flex gap-2 align-items-center" style="flex: 1;">
+                    <select class="form-select form-select-sm w-auto" id="filterTrangThai">
+                        <option value="">Tất cả TT</option>
+                        <option value="Chờ xử lý">Chờ xử lý</option>
+                        <option value="Đang giao">Đang giao</option>
+                        <option value="Hoàn thành">Hoàn thành</option>
+                        <option value="Đã hủy">Đã hủy</option>
+                    </select>
+                    <select class="form-select form-select-sm w-auto" id="filterTongTien">
+                        <option value="">Tổng tiền</option>
+                        <option value="low"> < 10 triệu</option>
+                        <option value="mid">10 - 50 triệu</option>
+                        <option value="high">> 50 triệu</option>
+                    </select>
+
+                    <button class="btn btn-primary btn-sm" onclick="filterOrders()" title="Áp dụng lọc"><i class="bi bi-funnel me-1"></i> Lọc</button>
+                    <button class="btn btn-outline-secondary btn-sm" onclick="refreshList()" title="Tải lại"><i class="bi bi-arrow-counterclockwise"></i> Tải lại</button>
+                </div>
+
+                <div>
+                    <button class="btn btn-success btn-sm" onclick="openAddModal()">
+                        <i class="bi bi-plus-lg me-1"></i> Tạo đơn
+                    </button>
+                </div>
+
+              </div>
+            </div>
+          </div>
+          
+          <div class="card">
+            <div class="card-body pt-0"> <h5 class="card-title">Quản lý giao dịch</h5>
+              
+              <div class="table-responsive">
+                  <table class="table table-hover table-bordered table-sm align-middle">
+                    <thead class="table-light">
+                      <tr>
+                        <th>Mã ĐH</th>
+                        <th>Khách hàng</th>
+                        <th>Người Lập</th>
+                        <th>Ngày lập</th>
+                        <th>Tổng tiền</th>
+                        <th class="text-center" style="width: 160px;">Trạng thái</th> 
+                        <th class="text-center">Tác vụ</th>
+                      </tr>
+                    </thead>
+                    <tbody id="tableBody" style="font-size: 0.9rem;"></tbody>
+                  </table>
+              </div>
+
+              <div class="d-flex justify-content-between align-items-center mt-3" style="font-size: 0.9rem;">
+                  <div class="pagination-info" id="recordCount"></div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div class="modal fade" id="orderModal" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header py-2">
+          <h5 class="modal-title" id="modalTitle">Tạo Đơn hàng mới</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body p-3">
+          <form id="orderForm">
+            <h6 class="fw-bold text-primary border-bottom pb-2 mb-3">I. Thông tin chung</h6>
+            <div class="row g-2 mb-4"> <div class="col-md-3">
+                    <label class="form-label small mb-1">Mã Đơn hàng <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control form-control-sm bg-light" id="maDonHang" placeholder="Đang tạo mã..." readonly>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small mb-1">Người lập <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control form-control-sm bg-light fw-bold" id="tenNguoiLap" readonly>
+                    <input type="hidden" id="maNguoiLap">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small mb-1">Ngày lập <span class="text-danger">*</span></label>
+                    <input type="datetime-local" class="form-control form-control-sm" id="ngayLap">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small mb-1">Trạng thái</label>
+                    <select class="form-select form-select-sm" id="trangThaiModal">
+                        <option value="Chờ xử lý">Chờ xử lý</option>
+                        <option value="Đang giao">Đang giao</option>
+                        <option value="Hoàn thành">Hoàn thành</option>
+                        <option value="Đã hủy">Đã hủy</option>
+                    </select>
+                    <small class="text-muted" id="statusNote" style="display: none; font-size: 0.7rem;">(Nhân viên không thể đổi)</small>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label small mb-1">Mã khách hàng <span class="text-danger">*</span></label>
+                    <select class="form-select form-select-sm" id="maKhachHang">
+                        <option value="">-- Chọn mã khách hàng --</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label small mb-1">Tên Khách hàng</label>
+                    <input type="text" class="form-control form-control-sm bg-light" id="tenKhachHang" readonly>
+                </div>
+            </div>
+
+            <h6 class="fw-bold text-primary border-bottom pb-2 mb-3 d-flex justify-content-between align-items-center">
+                II. Chi tiết sản phẩm
+                <button type="button" class="btn btn-sm btn-success pt-0 pb-0" onclick="addProductRow()">
+                    <i class="bi bi-plus-circle" style="font-size: 0.9rem;"></i> <span style="font-size: 0.9rem;">Thêm dòng</span>
+                </button>
+            </h6>
+            
+            <div class="table-responsive border rounded p-1 mb-3" style="max-height: 300px; overflow-y: auto;">
+                <table class="table table-bordered table-sm mb-0 order-table align-middle" style="font-size: 0.9rem;">
+                    <thead class="table-light sticky-top">
+                        <tr>
+                            <th style="width: 40%;">Sản phẩm</th>
+                            <th style="width: 15%;">Số lượng</th>
+                            <th style="width: 20%;">Đơn giá (VNĐ)</th>
+                            <th style="width: 20%;">Thành tiền</th>
+                            <th style="width: 5%;">Xóa</th>
+                        </tr>
+                    </thead>
+                    <tbody id="productTableBody"></tbody>
+                </table>
+            </div>
+
+            <div class="row justify-content-end">
+                <div class="col-md-4">
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text fw-bold">TỔNG TIỀN:</span>
+                        <input type="text" class="form-control text-end fw-bold text-danger bg-white" id="tongTien" value="0" readonly>
+                        <span class="input-group-text">VNĐ</span>
+                    </div>
+                </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer py-2">
+          <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Hủy</button>
+          <button type="button" class="btn btn-sm btn-primary" onclick="saveOrder()">Lưu Đơn hàng</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="detailModal" tabindex="-1"><div class="modal-dialog modal-lg modal-dialog-centered"><div class="modal-content"><div class="modal-header py-2"><h5 class="modal-title">Chi tiết Đơn hàng <span id="detailCode" class="text-primary fw-bold"></span></h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body p-3" id="printSection" style="font-size: 0.9rem;"><div class="row mb-3 p-2 bg-light rounded mx-1 border"><div class="col-md-6 mb-1"><strong>Khách hàng:</strong> <span id="detailCustomer"></span></div><div class="col-md-6 mb-1"><strong>Ngày lập:</strong> <span id="detailDate"></span></div><div class="col-md-6 mb-1"><strong>Người lập:</strong> <span id="detailUser"></span></div><div class="col-md-6 mb-1"><strong>Trạng thái:</strong> <span id="detailStatus"></span></div></div><h6 class="fw-bold border-bottom pb-1 mb-2">Danh sách sản phẩm</h6><div style="max-height: 400px; overflow-y: auto;"><table class="table table-sm table-striped table-hover border align-middlemb-0"><thead class="table-light"><tr><th>Mã SP</th><th>Tên Sản phẩm</th><th class="text-center">SL</th><th class="text-end">Đơn giá</th><th class="text-end">Thành tiền</th></tr></thead><tbody id="detailProductList"></tbody><tfoot><tr><td colspan="4" class="text-end fw-bold pt-2">TỔNG CỘNG:</td><td class="text-end fw-bold text-danger pt-2 fs-6" id="detailTotal">0đ</td></tr></tfoot></table></div></div><div class="modal-footer py-2"><button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Đóng</button><button type="button" class="btn btn-sm btn-primary" onclick="downloadInvoice()"><i class="bi bi-download me-1"></i> Tải Hóa đơn (PDF)</button></div></div></div></div>
+  <div class="modal fade" id="deleteModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header py-2"><h5 class="modal-title text-danger">Xác nhận xóa</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body" style="font-size: 0.9rem;">Bạn có chắc chắn muốn xóa đơn hàng <strong id="deleteOrderId"></strong> này không?<br>Dữ liệu chi tiết đơn hàng cũng sẽ bị xóa.</div><div class="modal-footer py-2"><button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Hủy</button><button type="button" class="btn btn-sm btn-danger" onclick="confirmDelete()">Xóa ngay</button></div></div></div></div>
+  <div class="modal fade" id="userProfileModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header py-2"><h5 class="modal-title">Hồ sơ của bạn</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body text-center p-3"><img src="" id="profileAvatar" class="rounded-circle mb-3" style="width: 80px; height: 80px; object-fit: cover; border: 3px solid #0d6efd;"><h5 id="profileName" class="fw-bold mb-1"></h5><p id="profileRole" class="text-muted mb-3 small"></p><div class="text-start px-4" style="font-size: 0.9rem;"><p class="mb-2"><i class="bi bi-person-vcard me-2"></i> <strong>Mã TK:</strong> <span id="profileId"></span></p><p class="mb-2"><i class="bi bi-envelope me-2"></i> <strong>Email:</strong> <span id="profileEmail"></span></p><p class="mb-2"><i class="bi bi-telephone me-2"></i> <strong>SĐT:</strong> <span id="profilePhone"></span></p></div></div><div class="modal-footer py-2"><button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Đóng</button></div></div></div></div>
+  <div class="modal fade" id="settingsModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header py-2"><h5 class="modal-title"><i class="bi bi-gear-fill me-2"></i>Cài đặt hiển thị</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body p-3" style="font-size: 0.9rem;"><div class="d-flex justify-content-between align-items-center mb-3"><div><h6 class="mb-0 fw-bold small"><i class="bi bi-moon-stars me-2"></i>Chế độ tối (Dark Mode)</h6></div><div class="form-check form-switch"><input class="form-check-input" type="checkbox" id="darkModeSwitch" onchange="toggleDarkMode()"></div></div><hr class="my-2"><div class="mb-2"><h6 class="mb-2 fw-bold small"><i class="bi bi-fonts me-2"></i>Kích thước chữ</h6><input type="range" class="form-range" min="12" max="20" step="1" id="fontSizeRange" oninput="changeFontSize(this.value)"><div class="d-flex justify-content-between text-muted small" style="font-size: 0.8rem;"><span>Nhỏ</span><span id="fontSizeValue">14px</span><span>Lớn</span></div></div></div><div class="modal-footer py-2"><button type="button" class="btn btn-sm btn-primary" data-bs-dismiss="modal">Xong</button></div></div></div></div>
+
+  <footer id="footer" class="footer"><div class="copyright">&copy; SmartZone</div></footer>
+  <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+
+  <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="assets/js/main.js"></script>
+
+<script>
+    // --- GIỮ NGUYÊN TOÀN BỘ SCRIPT TỪ PHIÊN BẢN TRƯỚC ---
+    // (Không có thay đổi logic JS nào trong yêu cầu này)
+    const BASE_URL = "http://localhost:8080/api";
+    const PHOTO_URL = "http://localhost:8080/photos/sanpham/";
+    const AVATAR_URL = "http://localhost:8080/photos/taikhoan/";
+
+    let originalData = []; 
+    let customers = []; 
+    let products = []; 
+    let accounts = []; 
+    
+    const currentUserStr = localStorage.getItem("currentUser");
+    if (!currentUserStr) window.location.href = "login.html";
+    const currentUser = JSON.parse(currentUserStr);
+    
+    var orderModal = new bootstrap.Modal(document.getElementById('orderModal'));
+    var detailModal = new bootstrap.Modal(document.getElementById('detailModal'));
+    var deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    var userProfileModal = new bootstrap.Modal(document.getElementById('userProfileModal'));
+    var settingsModal = new bootstrap.Modal(document.getElementById('settingsModal'));
+    
+    var isEditMode = false;
+    var currentDeleteId = null;
+
+    document.addEventListener("DOMContentLoaded", function() {
+        setupHeader();
+        applyRolePermissions();
+        loadDependencies();
+        loadOrders();
+        applySavedSettings();
+    });
+
+    // --- HÀM PHÂN QUYỀN ---
+    function applyRolePermissions() {
+        const roleName = currentUser.vaiTro ? currentUser.vaiTro.tenVaiTro : "";
+        
+        const menuThongKe = document.getElementById("menu-thongke");
+        const menuHangHoa = document.getElementById("menu-hanghoa");
+        const menuKho = document.getElementById("menu-kho");
+        const menuDonHang = document.getElementById("menu-donhang");
+        const menuKhachHang = document.getElementById("menu-khachhang");
+        const menuNCC = document.getElementById("menu-ncc");
+        const menuAccount = document.getElementById("menu-account");
+        const menuRole = document.getElementById("menu-role");
+        const labelAccount = document.getElementById("label-account");
+
+        // 1. STAFF
+        if (roleName === "Staff" || roleName === "Nhân viên" || roleName === "Kho") {
+            if(menuThongKe) menuThongKe.style.display = "none";
+            if(menuNCC) menuNCC.style.display = "none";
+            if(menuAccount) menuAccount.style.display = "none";
+            if(menuRole) menuRole.style.display = "none";
+        }
+        // 2. LEADER
+        else if (roleName === "Leader" || roleName === "Trưởng nhóm" || roleName === "Quản lý") {
+            if(menuThongKe) menuThongKe.style.display = "none";
+            if(menuAccount) menuAccount.style.display = "none";
+            if(menuRole) menuRole.style.display = "none";
+        }
+        // 3. BOSS
+        else if (roleName === "Boss" || roleName === "Giám đốc") {
+            if (menuAccount) {
+                if(labelAccount) labelAccount.innerText = "Quản lý Nhân sự";
+                const icon = menuAccount.querySelector("a i");
+                if(icon) { icon.classList.remove("bi-person-gear"); icon.classList.add("bi-people-fill"); }
+            }
+            if(menuRole) menuRole.style.display = "none";
+        }
+        // 4. ADMIN
+        else if (roleName === "Admin" || roleName === "Quản trị viên") {
+            if(menuThongKe) menuThongKe.style.display = "none";
+            if(menuHangHoa) menuHangHoa.style.display = "none";
+            if(menuKho) menuKho.style.display = "none";
+            if(menuDonHang) menuDonHang.style.display = "none";
+            if(menuKhachHang) menuKhachHang.style.display = "none";
+            if(menuNCC) menuNCC.style.display = "none";
+            
+            if(menuAccount) menuAccount.style.display = "block";
+            if(menuRole) menuRole.style.display = "block";
+        }
+    }
+
+    function setupHeader() {
+        const avatarUrl = currentUser.hinhAnh ? (AVATAR_URL + currentUser.hinhAnh) : "assets/img/profile-img.jpg";
+        document.getElementById("headerName").innerText = currentUser.tenDangNhap;
+        document.getElementById("headerAvatar").src = avatarUrl;
+        document.getElementById("headerFullName").innerText = currentUser.hoVaTen || currentUser.tenDangNhap;
+        document.getElementById("headerRole").innerText = currentUser.vaiTro ? currentUser.vaiTro.tenVaiTro : "Nhân viên";
+        document.getElementById("profileAvatar").src = avatarUrl;
+    }
+
+    function getCurrentDateTime() {
+        const now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        return now.toISOString().slice(0,16);
+    }
+    
+    async function loadDependencies() {
+        await fetch(`${BASE_URL}/taikhoan`).then(r => r.json()).then(data => { accounts = data; });
+
+        fetch(`${BASE_URL}/khachhang`).then(r => r.json()).then(data => {
+            customers = data;
+            const select = document.getElementById("maKhachHang");
+            let khachHangHtml = '<option value="">-- Chọn mã khách hàng --</option>';
+            data.forEach(kh => {
+                khachHangHtml += `<option value="${kh.maKhachHang}" data-name="${kh.tenKhachHang}">${kh.maKhachHang}</option>`;
+            });
+            select.innerHTML = khachHangHtml;
+            select.addEventListener('change', (e) => {
+                const selectedOption = e.target.options[e.target.selectedIndex];
+                document.getElementById('tenKhachHang').value = selectedOption.getAttribute('data-name') || '';
+            });
+        });
+
+        fetch(`${BASE_URL}/sanpham`).then(r => r.json()).then(data => { products = data; });
+    }
+
+    function loadOrders() {
+        fetch(`${BASE_URL}/donhang`).then(res => res.json()).then(data => {
+            originalData = data;
+            renderTable(originalData);
+        }).catch(err => console.error("Lỗi tải đơn hàng:", err));
+    }
+
+    // --- RENDER TABLE (LOGIC CHÍNH) ---
+    function renderTable(list) {
+        const tbody = document.getElementById("tableBody");
+        const roleName = currentUser.vaiTro ? currentUser.vaiTro.tenVaiTro : "";
+        const isStaff = (roleName === 'Staff' || roleName === 'Nhân viên' || roleName === 'Kho');
+        let html = "";
+        
+        if (list.length === 0) {
+            html = '<tr><td colspan="7" class="text-center text-muted">Không tìm thấy đơn hàng</td></tr>';
+        } else {
+            list.forEach(dh => {
+                let khName = dh.khachHang ? dh.khachHang.tenKhachHang : 'N/A';
+                let nguoiLapName = dh.nguoiLap ? (dh.nguoiLap.hoVaTen || dh.nguoiLap.maTaiKhoan) : 'N/A';
+                let total = new Intl.NumberFormat('vi-VN').format(dh.tongTien || 0);
+                
+                // 1. LOGIC HIỂN THỊ TRẠNG THÁI
+                const isFinalStatus = (dh.trangThai === 'Hoàn thành' || dh.trangThai === 'Đã hủy');
+                let statusContent = "";
+                const badgeClass = getStatusClass(dh.trangThai);
+
+                // Nếu là Staff HOẶC đơn đã kết thúc -> Chỉ hiện Badge (Không sửa được)
+                if (isStaff || isFinalStatus) {
+                    statusContent = `<span class="badge-status ${badgeClass}">${dh.trangThai}</span>`;
+                } else {
+                    // Nếu là Leader/Boss VÀ đơn chưa kết thúc -> Hiện Select (Dropdown)
+                    let options = '';
+                    if (dh.trangThai === 'Chờ xử lý') {
+                        options = `
+                            <option value="Chờ xử lý" selected>Chờ xử lý</option>
+                            <option value="Đang giao">Đang giao</option>
+                            <option value="Hoàn thành">Hoàn thành</option>
+                            <option value="Đã hủy">Đã hủy</option>
+                        `;
+                    } else if (dh.trangThai === 'Đang giao') {
+                        options = `
+                            <option value="Đang giao" selected>Đang giao</option>
+                            <option value="Hoàn thành">Hoàn thành</option>
+                            <option value="Đã hủy">Đã hủy</option>
+                        `;
+                    }
+
+                    statusContent = `
+                        <div class="status-wrapper">
+                            <select class="status-select ${badgeClass}" 
+                                    onchange="quickUpdateStatus('${dh.maDonHang}', this)">
+                                ${options}
+                            </select>
+                        </div>
+                    `;
+                }
+
+                // 2. LOGIC NÚT XÓA
+                let deleteBtn = "";
+                if (!isStaff) {
+                    deleteBtn = `<button class="btn btn-sm btn-danger" title="Xóa" onclick="openDeleteModal('${dh.maDonHang}')"><i class="bi bi-trash"></i></button>`;
+                }
+
+                const dhString = JSON.stringify(dh).replace(/'/g, "&#39;").replace(/"/g, "&quot;");
+
+                html += `
+                    <tr>
+                        <td><a href="#" onclick='openDetailModal(${dhString})'>${dh.maDonHang}</a></td>
+                        <td>${khName}</td>
+                        <td>${nguoiLapName}</td>
+                        <td>${new Date(dh.ngayLap).toLocaleString('vi-VN')}</td>
+                        <td class="fw-bold text-danger">${total}đ</td>
+                        <td class="text-center">${statusContent}</td>
+                        <td class="text-center action-col">
+                            <button class="btn btn-sm btn-info" title="Xem" onclick='openDetailModal(${dhString})'><i class="bi bi-eye"></i></button>
+                            <button class="btn btn-sm btn-warning" title="Sửa" onclick="openEditModal('${dh.maDonHang}')"><i class="bi bi-pencil"></i></button>
+                            ${deleteBtn}
+                        </td>
+                    </tr>`;
+            });
+        }
+        tbody.innerHTML = html;
+        document.getElementById("recordCount").innerText = `Hiển thị ${list.length} đơn hàng`;
+    }
+    
+    function getStatusClass(status) {
+        if (status === 'Chờ xử lý') return 'st-cho-xu-ly';
+        if (status === 'Đang giao') return 'st-dang-giao';
+        if (status === 'Hoàn thành') return 'st-hoan-thanh';
+        if (status === 'Đã hủy') return 'st-da-huy';
+        return 'bg-secondary';
+    }
+    
+    function getStatusBadge(status) {
+        return `<span class="badge-status ${getStatusClass(status)}">${status}</span>`;
+    }
+
+    // --- QUICK UPDATE STATUS (CÓ CONFIRM) ---
+    function quickUpdateStatus(maDonHang, selectEl) {
+        const newStatus = selectEl.value;
+        const order = originalData.find(o => o.maDonHang === maDonHang);
+        if (!order) return;
+        
+        // Lưu trạng thái cũ để revert nếu cancel
+        const oldStatus = order.trangThai;
+
+        // Luôn hỏi xác nhận trước khi thay đổi bất kỳ trạng thái nào
+        const msg = `Bạn có chắc chắn muốn chuyển trạng thái từ "${oldStatus}" sang "${newStatus}" không?`;
+        
+        if (!confirm(msg)) {
+            selectEl.value = oldStatus; // Revert về giá trị cũ
+            return;
+        }
+
+        const updatedOrder = { ...order, trangThai: newStatus };
+
+        fetch(`${BASE_URL}/donhang`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(updatedOrder)
+        }).then(async res => {
+            if(!res.ok) throw new Error(await res.text());
+            
+            // Cập nhật data gốc
+            order.trangThai = newStatus; 
+            
+            // Render lại bảng để áp dụng logic (chuyển thành Badge nếu là final status)
+            if (newStatus === 'Hoàn thành' || newStatus === 'Đã hủy' || newStatus === 'Đang giao') {
+                renderTable(originalData); 
+            } else {
+                selectEl.className = `status-select ${getStatusClass(newStatus)}`;
+            }
+            
+        }).catch(err => {
+            alert("Lỗi cập nhật: " + err.message);
+            selectEl.value = oldStatus; // Revert nếu lỗi API
+        });
+    }
+
+    // --- SEARCH & FILTER ---
+    function searchOrders() {
+        let keyword = document.getElementById("searchInput").value.toLowerCase().trim();
+        toggleClearBtn();
+        if (!keyword) { filterOrders(""); return; }
+        filterOrders(keyword);
+    }
+    
+    function filterOrders(keyword = "") {
+        if(!keyword) keyword = document.getElementById("searchInput").value.toLowerCase().trim();
+        const statusFilter = document.getElementById("filterTrangThai").value;
+        const totalFilter = document.getElementById("filterTongTien").value;
+
+        let filtered = originalData.filter(dh => {
+            const khName = dh.khachHang ? dh.khachHang.tenKhachHang.toLowerCase() : '';
+            const matchKeyword = dh.maDonHang.toLowerCase().includes(keyword) || khName.includes(keyword);
+            const matchStatus = statusFilter ? dh.trangThai === statusFilter : true;
+            const matchTotal = checkTotalRange(dh.tongTien, totalFilter);
+            return matchKeyword && matchStatus && matchTotal;
+        });
+        renderTable(filtered);
+    }
+    
+    function checkTotalRange(total, range) {
+        if (!range) return true;
+        const value = parseFloat(total);
+        if (range === 'low') return value < 10000000;
+        if (range === 'mid') return value >= 10000000 && value <= 50000000;
+        if (range === 'high') return value > 50000000;
+        return true;
+    }
+    
+    function refreshList() {
+        document.getElementById("searchInput").value = "";
+        document.getElementById("filterTrangThai").value = "";
+        document.getElementById("filterTongTien").value = "";
+        toggleClearBtn();
+        loadOrders();
+    }
+    
+    function toggleClearBtn() {
+        let inputVal = document.getElementById("searchInput").value;
+        let btn = document.getElementById("btnClearSearch");
+        if (inputVal.trim().length > 0) btn.classList.remove("d-none");
+        else { btn.classList.add("d-none"); if(inputVal.length === 0) filterOrders(""); }
+    }
+    
+    function clearSearch() {
+        let input = document.getElementById("searchInput");
+        input.value = "";
+        input.focus();
+        toggleClearBtn();
+        filterOrders("");
+    }
+
+    // --- PRODUCT TABLE LOGIC (Đã sửa cho modal compact) ---
+    function addProductRow(productMa = '', quantity = 1, price = 0) {
+        const tbody = document.getElementById('productTableBody');
+        const row = document.createElement('tr');
+        const total = price * quantity;
+        
+        let options = `<option value="" data-price="0">-- Chọn sản phẩm --</option>`;
+        products.forEach(p => {
+            const selected = p.maSanPham === productMa ? 'selected' : '';
+            options += `<option value="${p.maSanPham}" data-price="${p.giaBan}" ${selected}>${p.tenSanPham}</option>`;
+        });
+
+        // Sử dụng form-select-sm và form-control-sm trong modal
+        row.innerHTML = `
+            <td><select class="form-select form-select-sm border-0" onchange="updateRowTotal(this)">${options}</select></td>
+            <td><input type="number" class="form-control form-control-sm border-0 text-center" value="${quantity}" min="1" onchange="updateRowTotal(this)" onkeyup="updateRowTotal(this)"></td>
+            <td><input type="text" class="form-control form-control-sm border-0 text-end bg-light" value="${price.toLocaleString('vi-VN')}" readonly data-val="${price}"></td>
+            <td><input type="text" class="form-control form-control-sm border-0 text-end fw-bold bg-light row-total" value="${total.toLocaleString('vi-VN')}" readonly data-val="${total}"></td>
+            <td class="text-center"><i class="bi bi-trash del-row-btn" onclick="removeRow(this)"></i></td>
+        `;
+        tbody.appendChild(row);
+        calculateGrandTotal();
+    }
+
+    function removeRow(btn) { btn.closest('tr').remove(); calculateGrandTotal(); }
+
+    function updateRowTotal(element) {
+        const row = element.closest('tr');
+        const select = row.querySelector('select');
+        const quantityInput = row.querySelector('input[type="number"]');
+        const priceInput = row.querySelectorAll('input[type="text"]')[0];
+        const totalInput = row.querySelectorAll('input[type="text"]')[1];
+
+        const selectedPrice = select.options[select.selectedIndex].getAttribute('data-price');
+        const price = parseFloat(selectedPrice) || 0;
+        const quantity = parseInt(quantityInput.value) || 0;
+        const total = price * quantity;
+
+        priceInput.value = price.toLocaleString('vi-VN');
+        priceInput.setAttribute('data-val', price); 
+        totalInput.value = total.toLocaleString('vi-VN');
+        totalInput.setAttribute('data-val', total); 
+
+        calculateGrandTotal();
+    }
+
+    function calculateGrandTotal() {
+        let grandTotal = 0;
+        document.querySelectorAll('#productTableBody tr').forEach(row => {
+            const totalInput = row.querySelectorAll('.row-total')[0];
+            grandTotal += parseFloat(totalInput.getAttribute('data-val')) || 0;
+        });
+        document.getElementById('tongTien').value = grandTotal.toLocaleString('vi-VN');
+    }
+
+    // --- MODAL ACTIONS ---
+    function openAddModal() {
+        document.getElementById('modalTitle').innerText = "Tạo Đơn hàng mới";
+        document.getElementById('orderForm').reset();
+        
+        // Auto-fill
+        document.getElementById('tenNguoiLap').value = currentUser.hoVaTen || currentUser.tenDangNhap;
+        document.getElementById('maNguoiLap').value = currentUser.maTaiKhoan;
+
+        // Mặc định Chờ xử lý & Luôn Disabled
+        const statusSelect = document.getElementById('trangThaiModal');
+        const statusNote = document.getElementById('statusNote');
+        statusSelect.value = "Chờ xử lý"; 
+        statusSelect.disabled = true; // LUÔN DISABLE KHI TẠO MỚI
+        statusNote.style.display = 'block';
+        statusNote.innerText = "(Mặc định khi tạo mới)";
+
+        fetch(`${BASE_URL}/donhang/next-id`).then(r => r.text()).then(id => {
+            document.getElementById('maDonHang').value = id;
+        });
+
+        document.getElementById('maDonHang').disabled = true;
+        document.getElementById('ngayLap').value = getCurrentDateTime();
+        
+        document.getElementById('productTableBody').innerHTML = '';
+        addProductRow(); 
+        calculateGrandTotal();
+        
+        isEditMode = false;
+        orderModal.show();
+    }
+    
+    function openEditModal(maDH) {
+        const dh = originalData.find(o => o.maDonHang === maDH);
+        if (!dh) return;
+
+        const roleName = currentUser.vaiTro ? currentUser.vaiTro.tenVaiTro : "";
+        const isStaff = (roleName === 'Staff' || roleName === 'Nhân viên' || roleName === 'Kho');
+        const isFinal = (dh.trangThai === 'Hoàn thành' || dh.trangThai === 'Đã hủy');
+
+        document.getElementById('modalTitle').innerText = "Cập nhật Đơn hàng";
+        document.getElementById('maDonHang').value = dh.maDonHang;
+        document.getElementById('maDonHang').disabled = true; 
+        document.getElementById('ngayLap').value = dh.ngayLap ? dh.ngayLap.slice(0, 16) : getCurrentDateTime(); 
+        
+        const creatorName = dh.nguoiLap ? (dh.nguoiLap.hoVaTen || dh.nguoiLap.tenDangNhap) : "N/A";
+        const creatorId = dh.nguoiLap ? dh.nguoiLap.maTaiKhoan : "";
+        document.getElementById('tenNguoiLap').value = creatorName;
+        document.getElementById('maNguoiLap').value = creatorId;
+
+        const statusSelect = document.getElementById('trangThaiModal');
+        const statusNote = document.getElementById('statusNote');
+        statusSelect.value = dh.trangThai; 
+
+        if (isStaff || isFinal) {
+            statusSelect.disabled = true;
+            statusNote.style.display = 'block';
+            statusNote.innerText = isFinal ? "(Đơn hàng đã kết thúc)" : "(Nhân viên không thể đổi trạng thái)";
+        } else {
+            statusSelect.disabled = false;
+            statusNote.style.display = 'none';
+        }
+        
+        const khSelect = document.getElementById('maKhachHang');
+        khSelect.value = dh.khachHang ? dh.khachHang.maKhachHang : "";
+        const selectedKhOption = khSelect.options[khSelect.selectedIndex];
+        document.getElementById('tenKhachHang').value = selectedKhOption ? selectedKhOption.getAttribute('data-name') : ''; 
+
+        document.getElementById('productTableBody').innerHTML = '';
+        if (dh.chiTietDonHangs && dh.chiTietDonHangs.length > 0) {
+            dh.chiTietDonHangs.forEach(ctdh => {
+                addProductRow(ctdh.sanPham.maSanPham, ctdh.soLuong, parseFloat(ctdh.donGiaBan));
+            });
+        } else { addProductRow(); }
+        calculateGrandTotal();
+
+        isEditMode = true;
+        orderModal.show();
+    }
+
+    function getOrderDetailsFromForm() {
+        const details = [];
+        let detailCount = 1;
+        const maDH = document.getElementById('maDonHang').value;
+        document.querySelectorAll('#productTableBody tr').forEach(row => {
+            const select = row.querySelector('select');
+            const qtyInput = row.querySelector('input[type="number"]');
+            const priceInput = row.querySelectorAll('input[type="text"]')[0];
+            const totalInput = row.querySelectorAll('input[type="text"]')[1];
+            const maSanPham = select.value;
+            const soLuong = parseInt(qtyInput.value);
+            const donGiaBan = parseFloat(priceInput.getAttribute('data-val'));
+            const thanhTien = parseFloat(totalInput.getAttribute('data-val'));
+            if (maSanPham && soLuong > 0) {
+                details.push({
+                    maCTDH: maDH + "-" + String(detailCount++).padStart(2, '0'),
+                    sanPham: { maSanPham: maSanPham },
+                    soLuong: soLuong,
+                    donGiaBan: donGiaBan,
+                    thanhTien: thanhTien
+                });
+            }
+        });
+        return details;
+    }
+
+    function saveOrder() {
+        const details = getOrderDetailsFromForm();
+        if (details.length === 0) { alert("Phải có ít nhất 1 sản phẩm!"); return; }
+        const maDH = document.getElementById('maDonHang').value.trim();
+        const maKH = document.getElementById('maKhachHang').value;
+        if(!maKH) { alert("Vui lòng chọn khách hàng!"); return; }
+
+        const data = {
+            maDonHang: maDH,
+            khachHang: { maKhachHang: maKH },
+            nguoiLap: { maTaiKhoan: document.getElementById('maNguoiLap').value },
+            ngayLap: document.getElementById('ngayLap').value,
+            trangThai: document.getElementById('trangThaiModal').value,
+            tongTien: parseFloat(document.getElementById('tongTien').value.replace(/\./g, '').replace(/,/g, '')),
+            chiTietDonHangs: details
+        };
+
+        const method = isEditMode ? 'PUT' : 'POST';
+        fetch(`${BASE_URL}/donhang`, {
+            method: method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data)
+        }).then(async res => {
+            if(!res.ok) throw new Error(await res.text());
+            return res.json();
+        }).then(() => {
+            alert("Lưu đơn hàng thành công!"); orderModal.hide(); loadOrders();
+        }).catch(err => alert("Lỗi: " + err.message));
+    }
+
+    // --- DETAIL, PDF & DELETE ---
+    function openDetailModal(dh) {
+        document.getElementById('detailCode').innerText = dh.maDonHang;
+        document.getElementById('detailDate').innerText = new Date(dh.ngayLap).toLocaleString('vi-VN');
+        document.getElementById('detailCustomer').innerText = dh.khachHang ? dh.khachHang.tenKhachHang : "N/A";
+        document.getElementById('detailUser').innerText = dh.nguoiLap ? dh.nguoiLap.hoVaTen : "N/A";
+        document.getElementById('detailStatus').innerHTML = getStatusBadge(dh.trangThai);
+        const tbody = document.getElementById('detailProductList');
+        let html = "";
+        let totalSum = 0;
+        if (dh.chiTietDonHangs && dh.chiTietDonHangs.length > 0) {
+            dh.chiTietDonHangs.forEach(ctdh => {
+                const price = parseFloat(ctdh.donGiaBan);
+                const lineTotal = parseFloat(ctdh.thanhTien);
+                totalSum += lineTotal;
+                html += `<tr><td>${ctdh.sanPham ? ctdh.sanPham.maSanPham : 'N/A'}</td><td>${ctdh.sanPham ? ctdh.sanPham.tenSanPham : 'SP đã xóa'}</td><td class="text-center">${ctdh.soLuong}</td><td class="text-end">${price.toLocaleString('vi-VN')}</td><td class="text-end">${lineTotal.toLocaleString('vi-VN')}</td></tr>`;
+            });
+        }
+        tbody.innerHTML = html;
+        document.getElementById('detailTotal').innerText = totalSum.toLocaleString('vi-VN') + 'đ';
+        detailModal.show();
+    }
+
+    function downloadInvoice() {
+        const element = document.getElementById('printSection');
+        const maDH = document.getElementById('detailCode').innerText;
+        const opt = { margin: 10, filename: `HoaDon_${maDH}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } };
+        html2pdf().set(opt).from(element).save();
+    }
+
+    function openDeleteModal(id) { document.getElementById('deleteOrderId').innerText = id; currentDeleteId = id; deleteModal.show(); }
+    function confirmDelete() {
+        if(!currentDeleteId) return;
+        fetch(`${BASE_URL}/donhang/${currentDeleteId}`, { method: 'DELETE' }).then(async res => {
+            if(res.ok) { alert("Xóa thành công!"); deleteModal.hide(); loadOrders(); }
+            else { alert("Lỗi khi xóa!"); }
+        }).catch(err => console.error(err));
+    }
+
+    // --- PROFILE & SETTINGS (Giữ nguyên JS) ---
+    function showUserProfile() {
+        const avatarUrl = currentUser.hinhAnh ? (PHOTO_URL + currentUser.hinhAnh) : "assets/img/profile-img.jpg";
+        document.getElementById('profileId').innerText = currentUser.maTaiKhoan;
+        document.getElementById('profileName').innerText = currentUser.hoVaTen || currentUser.tenDangNhap;
+        document.getElementById('profileEmail').innerText = currentUser.email || "Chưa cập nhật";
+        document.getElementById('profilePhone').innerText = currentUser.sdt || "Chưa cập nhật";
+        document.getElementById('profileAvatar').src = avatarUrl;
+        userProfileModal.show();
+    }
+    function openSettingsModal() {
+        document.getElementById("darkModeSwitch").checked = localStorage.getItem("darkMode") === "true";
+        document.getElementById("fontSizeRange").value = localStorage.getItem("fontSize") || "14";
+        settingsModal.show();
+    }
+    function toggleDarkMode() {
+        const isChecked = document.getElementById("darkModeSwitch").checked;
+        if(isChecked) { document.body.classList.add("dark-mode"); localStorage.setItem("darkMode", "true"); } 
+        else { document.body.classList.remove("dark-mode"); localStorage.setItem("darkMode", "false"); }
+    }
+    function changeFontSize(val) {
+        document.documentElement.style.fontSize = val + "px"; document.body.style.fontSize = val + "px"; 
+        localStorage.setItem("fontSize", val);
+    }
+    function applySavedSettings() {
+        if(localStorage.getItem("darkMode") === "true") document.body.classList.add("dark-mode");
+        const savedSize = localStorage.getItem("fontSize");
+        if(savedSize) { document.documentElement.style.fontSize = savedSize + "px"; document.body.style.fontSize = savedSize + "px"; }
+    }
+    function logout() {
+        if(confirm("Bạn có chắc chắn muốn đăng xuất?")) { localStorage.removeItem("currentUser"); window.location.href = "login.html"; }
+    }
+</script>
+</body>
+</html>

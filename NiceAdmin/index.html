@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+
+  <title>Dashboard - Quản lý kho hàng Smart Zone</title>
+
+  <link href="assets/img/favicon.png" rel="icon">
+  <link href="assets/img/apple-touch-icon.png" rel="apple-touch-icon">
+
+  <link href="https://fonts.gstatic.com" rel="preconnect">
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Nunito:300,300i,400,400i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i" rel="stylesheet">
+
+  <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+  <link href="assets/vendor/boxicons/css/boxicons.min.css" rel="stylesheet">
+  <link href="assets/vendor/simple-datatables/style.css" rel="stylesheet">
+
+  <link href="assets/css/style.css" rel="stylesheet">
+
+  <style>
+    /* --- Custom Card Styles --- */
+    .card-icon { width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 32px; }
+    .card-sales .card-icon { color: #4154f1; background: #f6f9ff; }
+    .card-revenue .card-icon { color: #2eca6a; background: #e0f8e9; }
+    .card-customers .card-icon { color: #ff771d; background: #ffecdf; }
+    .card-products .card-icon { color: #0dcaf0; background: #e0f8f8; } 
+    .card-orders .card-icon { color: #712cf9; background: #f3e5f5; } 
+    .card-suppliers .card-icon { color: #fd7e14; background: #fff3cd; } 
+    .card-expense .card-icon { color: #dc3545; background: #f8d7da; }
+
+    /* Activity Styles */
+    .activity-item { font-size: 14px; padding-bottom: 15px; padding-left: 20px; border-left: 2px solid #e0e0e0; position: relative; }
+    .activity-item:last-child { border-left: 2px solid transparent; }
+    .activity-item::before { content: ""; position: absolute; width: 12px; height: 12px; border-radius: 50%; left: -7px; top: 0px; background: #fff; border: 2px solid #4154f1; }
+    .activite-label { min-width: 64px; font-size: 12px; color: #888; display: inline-block; }
+    .activity-content { padding-left: 10px; padding-bottom: 0; display: inline-block; }
+    .activity-item.text-primary::before { border-color: #0d6efd; }
+    .activity-item.text-success::before { border-color: #198754; }
+    .activity-item.text-warning::before { border-color: #ffc107; }
+
+    .product-img-thumb { width: 40px; height: 40px; object-fit: cover; border-radius: 5px; }
+    #headerAvatar { width: 36px; height: 36px; object-fit: cover; border-radius: 50%; }
+    
+    /* Dark Mode */
+    body.dark-mode { background-color: #1a1a2e; color: #e0e0e0; }
+    body.dark-mode .header { background-color: #16213e; box-shadow: 0px 2px 20px rgba(0, 0, 0, 0.4); }
+    body.dark-mode .sidebar, body.dark-mode .card, body.dark-mode .modal-content { background-color: #16213e; color: #fff; border-color: #2c3e50; }
+    body.dark-mode .list-group-item { background-color: #16213e; color: #fff; border-color: #2c3e50; }
+    body.dark-mode .table { color: #e0e0e0; }
+    body.dark-mode .text-dark { color: #fff !important; }
+    body.dark-mode .search-form { background-color: #16213e; border-color: #555; }
+    body.dark-mode .search-form input, body.dark-mode .search-form button { color: #fff; }
+    body.dark-mode .dropdown-menu { background-color: #16213e; border: 1px solid #444; }
+    body.dark-mode .dropdown-item { color: #e0e0e0; }
+    body.dark-mode .dropdown-item:hover { background-color: #0f3460; }
+  </style>
+</head>
+
+<body>
+
+  <header id="header" class="header fixed-top d-flex align-items-center">
+    <div class="d-flex align-items-center justify-content-between">
+      <a href="index.html" class="logo d-flex align-items-center">
+        <img src="assets/img/logo.png" alt="">
+        <span class="d-none d-lg-block">Smart Zone</span>
+      </a>
+      <i class="bi bi-list toggle-sidebar-btn"></i>
+    </div>
+
+    <div class="search-bar">
+      <form class="search-form d-flex align-items-center" onsubmit="event.preventDefault(); searchDashboard();">
+        <input type="text" id="searchInput" placeholder="Tìm hoạt động, mã phiếu..." title="Enter search keyword">
+        <button type="button" onclick="searchDashboard()" title="Search"><i class="bi bi-search"></i></button>
+      </form>
+    </div>
+
+    <nav class="header-nav ms-auto">
+      <ul class="d-flex align-items-center">
+        <li class="nav-item d-block d-lg-none"><a class="nav-link nav-icon search-bar-toggle " href="#"><i class="bi bi-search"></i></a></li>
+        <li class="nav-item dropdown">
+          <a class="nav-link nav-icon" href="#" data-bs-toggle="dropdown">
+            <i class="bi bi-bell"></i>
+            <span class="badge bg-primary badge-number" id="notificationBadge">0</span>
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow notifications" id="notificationList">
+            <li class="dropdown-header">Đang tải thông báo...</li>
+          </ul>
+        </li>
+        <li class="nav-item dropdown pe-3">
+          <a class="nav-link nav-profile d-flex align-items-center pe-0" href="#" data-bs-toggle="dropdown">
+            <img src="assets/img/profile-img.jpg" alt="Profile" class="rounded-circle" id="headerAvatar">
+            <span class="d-none d-md-block dropdown-toggle ps-2" id="headerName">Admin</span>
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow profile">
+            <li class="dropdown-header"><h6 id="headerFullName">Quản trị viên</h6><span id="headerRole">Quản lý kho</span></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item d-flex align-items-center" href="#" onclick="showUserProfile()"><i class="bi bi-person"></i><span>Hồ sơ của bạn</span></a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item d-flex align-items-center" href="#" onclick="openSettingsModal()"><i class="bi bi-gear"></i><span>Cài đặt hiển thị</span></a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item d-flex align-items-center" href="#" onclick="logout()"><i class="bi bi-box-arrow-right"></i><span>Đăng xuất</span></a></li>
+          </ul>
+        </li>
+      </ul>
+    </nav>
+  </header>
+
+  <aside id="sidebar" class="sidebar">
+    <ul class="sidebar-nav" id="sidebar-nav">
+      
+      <li class="nav-item" id="menu-thongke">
+        <a class="nav-link" href="index.html">
+          <i class="bi bi-grid"></i><span>Thống kê</span>
+        </a>
+      </li>
+      
+      <li class="nav-item" id="menu-hanghoa">
+        <a class="nav-link collapsed" data-bs-target="#hanghoa-nav" data-bs-toggle="collapse" href="#">
+          <i class="bi bi-box-seam"></i><span>Quản lý Hàng hóa</span><i class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="hanghoa-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+          <li><a href="dsdanhmuc.html"><i class="bi bi-circle"></i>Danh sách Danh mục</a></li>
+          <li><a href="dssanpham.html"><i class="bi bi-circle"></i>Danh sách Sản phẩm</a></li>
+        </ul>
+      </li>
+
+      <li class="nav-item" id="menu-kho">
+        <a class="nav-link collapsed" data-bs-target="#kho-nav" data-bs-toggle="collapse" href="#">
+          <i class="bi bi-house-door"></i><span>Quản lý Kho hàng</span><i class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="kho-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+          <li><a href="dsphieunhap.html"><i class="bi bi-circle"></i>Danh sách Phiếu Nhập</a></li>
+          <li><a href="dsphieuxuat.html"><i class="bi bi-circle"></i>Danh sách Phiếu Xuất</a></li>
+          <li><a href="tonkho.html"><i class="bi bi-circle"></i>Thống kê Tồn kho</a></li>
+        </ul>
+      </li>
+
+      <li class="nav-item" id="menu-donhang">
+        <a class="nav-link collapsed" href="dsdonhang.html">
+          <i class="bi bi-cart-check"></i><span>Quản lý Đơn hàng</span>
+        </a>
+      </li>
+
+      <li class="nav-item" id="menu-khachhang">
+        <a class="nav-link collapsed" href="dskhachhang.html">
+          <i class="bi bi-people"></i><span>Quản lý Khách hàng</span>
+        </a>
+      </li>
+      
+      <li class="nav-item" id="menu-ncc">
+        <a class="nav-link collapsed" href="dsnhacungcap.html">
+          <i class="bi bi-truck"></i><span>Quản lý Nhà cung cấp</span>
+        </a>
+      </li>
+      
+      <li class="nav-item" id="menu-account">
+        <a class="nav-link collapsed" href="dsnguoidung.html">
+          <i class="bi bi-person-gear"></i><span id="label-account">Quản lý Tài khoản</span>
+        </a>
+      </li>
+
+      <li class="nav-item" id="menu-role">
+        <a class="nav-link collapsed" href="dsvaitro.html">
+          <i class="bi bi-shield-lock"></i><span>Quản lý Vai trò</span>
+        </a>
+      </li>
+    </ul>
+  </aside>
+
+  <main id="main" class="main">
+    <div class="pagetitle">
+      <h1>Dashboard</h1>
+      <nav>
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="index.html">Trang chủ</a></li>
+          <li class="breadcrumb-item active">Tổng quan</li>
+        </ol>
+      </nav>
+    </div>
+
+    <div id="welcome-message" class="text-center py-5" style="display: none;">
+        <img src="assets/img/logo.png" alt="SmartZone" style="max-height: 150px; margin-bottom: 20px;">
+        <h2 class="text-primary fw-bold">Chào mừng bạn đến với Smart Zone</h2>
+        <p class="lead" id="welcome-subtitle">Chúc bạn một ngày làm việc hiệu quả!</p>
+        <div class="alert alert-info d-inline-block mt-3">
+            <i class="bi bi-info-circle me-2"></i>Vui lòng chọn chức năng từ menu bên trái để bắt đầu.
+        </div>
+    </div>
+
+    <section class="section dashboard" id="main-dashboard-content">
+      <div class="row">
+
+        <div class="col-lg-8">
+          <div class="row">
+
+            <div class="col-xxl-4 col-md-6 finance-card">
+              <div class="card info-card card-sales">
+                <div class="card-body">
+                  <h5 class="card-title">Tổng Thu <span>| Xuất kho</span></h5>
+                  <div class="d-flex align-items-center">
+                    <div class="card-icon rounded-circle"><i class="bi bi-currency-dollar"></i></div>
+                    <div class="ps-3"><h6 id="totalRevenue">0đ</h6><span class="text-muted small pt-2 ps-1">Doanh thu xuất</span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-xxl-4 col-md-6 finance-card">
+              <div class="card info-card card-expense">
+                <div class="card-body">
+                  <h5 class="card-title">Tổng Chi <span>| Nhập kho</span></h5>
+                  <div class="d-flex align-items-center">
+                    <div class="card-icon rounded-circle"><i class="bi bi-bag-check"></i></div>
+                    <div class="ps-3"><h6 id="totalExpense">0đ</h6><span class="text-muted small pt-2 ps-1">Chi phí nhập</span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-xxl-4 col-md-6 finance-card">
+              <div class="card info-card card-revenue">
+                <div class="card-body">
+                  <h5 class="card-title">Lợi Nhuận <span>| Ước tính</span></h5>
+                  <div class="d-flex align-items-center">
+                    <div class="card-icon rounded-circle"><i class="bi bi-graph-up-arrow"></i></div>
+                    <div class="ps-3"><h6 id="totalProfit">0đ</h6><span class="text-muted small pt-2 ps-1">Lãi gộp</span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-xxl-3 col-md-6">
+              <div class="card info-card card-orders">
+                <div class="card-body">
+                  <h5 class="card-title">Đơn hàng</h5>
+                  <div class="d-flex align-items-center">
+                    <div class="card-icon rounded-circle"><i class="bi bi-cart-check"></i></div>
+                    <div class="ps-3"><h6 id="countDonHang">0</h6><span class="text-muted small pt-2 ps-1">Đơn</span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-xxl-3 col-md-6">
+              <div class="card info-card card-products">
+                <div class="card-body">
+                  <h5 class="card-title">Sản phẩm</h5>
+                  <div class="d-flex align-items-center">
+                    <div class="card-icon rounded-circle"><i class="bi bi-box-seam"></i></div>
+                    <div class="ps-3"><h6 id="countSanPham">0</h6><span class="text-muted small pt-2 ps-1">Mã SP</span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-xxl-3 col-md-6">
+              <div class="card info-card card-customers">
+                <div class="card-body">
+                  <h5 class="card-title">Khách hàng</h5>
+                  <div class="d-flex align-items-center">
+                    <div class="card-icon rounded-circle"><i class="bi bi-people"></i></div>
+                    <div class="ps-3"><h6 id="countKhachHang">0</h6><span class="text-muted small pt-2 ps-1">Khách</span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-xxl-3 col-md-6">
+              <div class="card info-card card-suppliers">
+                <div class="card-body">
+                  <h5 class="card-title">Đối tác</h5>
+                  <div class="d-flex align-items-center">
+                    <div class="card-icon rounded-circle"><i class="bi bi-truck"></i></div>
+                    <div class="ps-3"><h6 id="countNCC">0</h6><span class="text-muted small pt-2 ps-1">NCC</span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-12 finance-card">
+              <div class="card">
+                <div class="card-body">
+                  <h5 class="card-title">Biểu đồ Tài chính <span>/7 ngày qua (VND)</span></h5>
+                  <div id="reportsChart"></div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="col-12">
+              <div class="card top-selling overflow-auto">
+                <div class="card-body pb-0">
+                  <h5 class="card-title text-danger">⚠️ Cảnh báo sắp hết hàng <span>(Tồn < 10)</span></h5>
+                  <table class="table table-borderless">
+                    <thead><tr><th scope="col">Ảnh</th><th scope="col">Sản phẩm</th><th scope="col" class="text-center">Tồn kho</th><th scope="col" class="text-center">Trạng thái</th></tr></thead>
+                    <tbody id="lowStockTableBody"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-12">
+              <div class="card">
+                <div class="card-body pb-0">
+                  <h5 class="card-title">🔥 Sản phẩm bán chạy <span>| Top 5</span></h5>
+                  <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead><tr><th>#</th><th>Sản phẩm</th><th>Đã bán</th></tr></thead>
+                        <tbody id="topSellingBody"></tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="col-lg-4">
+          
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Hoạt động gần đây <span>| Của bạn</span></h5>
+                    <div class="activity" id="recentActivityBody" style="max-height: 400px; overflow-y: auto;">
+                        <div class="text-center text-muted p-3">Đang tải...</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Tình trạng đơn hàng</h5>
+                    <div id="orderStatusChart" style="min-height: 300px;" class="echart"></div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-body pb-0">
+                    <h5 class="card-title">Tồn kho theo Danh mục <span>| % Số lượng</span></h5>
+                    <div id="categoryStockChart" style="min-height: 300px;" class="echart"></div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-body pb-0">
+                    <h5 class="card-title">💎 Top Khách hàng</h5>
+                    <table class="table table-borderless table-hover">
+                        <thead><tr><th scope="col">Khách hàng</th><th scope="col">Chi tiêu</th></tr></thead>
+                        <tbody id="topCustomerBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div class="modal fade" id="userProfileModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Hồ sơ của bạn</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body text-center"><img src="" id="profileAvatar" class="rounded-circle mb-3" style="width: 100px; height: 100px; object-fit: cover; border: 3px solid #0d6efd;"><h4 id="profileName" class="fw-bold"></h4><p id="profileRole" class="text-muted mb-3"></p><div class="text-start px-3"><p><strong>Mã TK:</strong> <span id="profileId"></span></p><p><strong>Email:</strong> <span id="profileEmail"></span></p><p><strong>SĐT:</strong> <span id="profilePhone"></span></p></div></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button></div></div></div></div>
+  <div class="modal fade" id="settingsModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h5 class="modal-title"><i class="bi bi-gear-fill me-2"></i>Cài đặt hiển thị</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="d-flex justify-content-between align-items-center mb-4"><div><h6 class="mb-0 fw-bold">Chế độ tối</h6></div><div class="form-check form-switch"><input class="form-check-input" type="checkbox" id="darkModeSwitch" onchange="toggleDarkMode()"></div></div><hr><div class="mb-3"><h6 class="mb-2 fw-bold">Kích thước chữ</h6><input type="range" class="form-range" min="12" max="20" step="1" id="fontSizeRange" oninput="changeFontSize(this.value)"><div class="d-flex justify-content-between small"><span>Nhỏ</span><span id="fontSizeValue">14px</span><span>Lớn</span></div></div></div><div class="modal-footer"><button type="button" class="btn btn-primary" data-bs-dismiss="modal">Xong</button></div></div></div></div>
+
+  <footer id="footer" class="footer"><div class="copyright">&copy; SmartZone</div></footer>
+  <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+
+  <script src="assets/vendor/apexcharts/apexcharts.min.js"></script>
+  <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="assets/vendor/echarts/echarts.min.js"></script>
+  <script src="assets/js/main.js"></script>
+
+  <script>
+    const BASE_URL = "http://localhost:8080/api";
+    const PHOTO_URL = "http://localhost:8080/photos/sanpham/";
+    const AVATAR_URL = "http://localhost:8080/photos/taikhoan/";
+
+    let myActivities = [];
+    
+    const currentUserStr = localStorage.getItem("currentUser");
+    if (!currentUserStr) window.location.href = "login.html";
+    const currentUser = JSON.parse(currentUserStr);
+    var userProfileModal = new bootstrap.Modal(document.getElementById('userProfileModal'));
+    var settingsModal = new bootstrap.Modal(document.getElementById('settingsModal'));
+
+    document.addEventListener("DOMContentLoaded", function() {
+        setupHeader();
+        applyRolePermissions();
+        applySavedSettings();
+    });
+
+    // --- HÀM PHÂN QUYỀN CHÍNH XÁC ---
+    function applyRolePermissions() {
+        const roleName = currentUser.vaiTro ? currentUser.vaiTro.tenVaiTro : "";
+        
+        // 1. DOM Elements Menu
+        const menuThongKe = document.getElementById("menu-thongke");
+        const menuHangHoa = document.getElementById("menu-hanghoa"); // Dropdown
+        const menuKho = document.getElementById("menu-kho");         // Dropdown
+        const menuDonHang = document.getElementById("menu-donhang");
+        const menuKhachHang = document.getElementById("menu-khachhang");
+        const menuNCC = document.getElementById("menu-ncc");
+        const menuAccount = document.getElementById("menu-account");
+        const menuRole = document.getElementById("menu-role");
+        const labelAccount = document.getElementById("label-account");
+
+        // 2. DOM Elements Dashboard
+        const dashboardContent = document.getElementById("main-dashboard-content");
+        const welcomeMessage = document.getElementById("welcome-message");
+        const financeCards = document.querySelectorAll(".finance-card"); // Thẻ tài chính (Doanh thu, Lợi nhuận, Biểu đồ)
+
+        // Mặc định: Hiện Dashboard, Ẩn Welcome
+        dashboardContent.style.display = "block";
+        welcomeMessage.style.display = "none";
+        financeCards.forEach(c => c.style.display = "block");
+
+        // --- CASE 1: STAFF (NV Kho/Nhân viên) ---
+        if (roleName === "Staff" || roleName === "Nhân viên" || roleName === "Kho") {
+            // Ẩn Menu: Thống kê, NCC, Tài khoản, Vai trò
+            if(menuThongKe) menuThongKe.style.display = "none";
+            if(menuNCC) menuNCC.style.display = "none";
+            if(menuAccount) menuAccount.style.display = "none";
+            if(menuRole) menuRole.style.display = "none";
+
+            // Màn hình: CHÀO MỪNG (Ẩn Dashboard)
+            dashboardContent.style.display = "none";
+            welcomeMessage.style.display = "block";
+        }
+
+        // --- CASE 2: LEADER (Quản lý/Trưởng nhóm) ---
+        else if (roleName === "Leader" || roleName === "Trưởng nhóm" || roleName === "Quản lý") {
+            // Ẩn Menu: Thống kê, Tài khoản, Vai trò (Vẫn hiện NCC)
+            if(menuThongKe) menuThongKe.style.display = "none";
+            if(menuAccount) menuAccount.style.display = "none";
+            if(menuRole) menuRole.style.display = "none";
+
+            // Màn hình: HIỆN DASHBOARD NHƯNG ẨN TÀI CHÍNH
+            dashboardContent.style.display = "block";
+            financeCards.forEach(c => c.style.display = "none"); // Ẩn các thẻ liên quan đến tiền
+            
+            loadDashboardData(); // Load dữ liệu (số lượng)
+        }
+
+        // --- CASE 3: BOSS (Giám đốc) ---
+        else if (roleName === "Boss" || roleName === "Giám đốc") {
+            // Đổi tên "Tài khoản" -> "Nhân sự", Ẩn "Vai trò"
+            if (menuAccount) {
+                if(labelAccount) labelAccount.innerText = "Quản lý Nhân sự";
+                const icon = menuAccount.querySelector("a i");
+                if(icon) { icon.classList.remove("bi-person-gear"); icon.classList.add("bi-people-fill"); }
+            }
+            if(menuRole) menuRole.style.display = "none";
+
+            // Màn hình: FULL DASHBOARD (Báo cáo thống kê)
+            dashboardContent.style.display = "block";
+            loadDashboardData();
+        }
+
+        // --- CASE 4: ADMIN (Quản trị viên) ---
+        else if (roleName === "Admin" || roleName === "Quản trị viên") {
+            // Ẩn hết nghiệp vụ bán hàng, chỉ để lại Account & Role
+            if(menuThongKe) menuThongKe.style.display = "none";
+            if(menuHangHoa) menuHangHoa.style.display = "none";
+            if(menuKho) menuKho.style.display = "none";
+            if(menuDonHang) menuDonHang.style.display = "none";
+            if(menuKhachHang) menuKhachHang.style.display = "none";
+            if(menuNCC) menuNCC.style.display = "none";
+            
+            // Màn hình: CHÀO MỪNG (Ẩn Dashboard)
+            dashboardContent.style.display = "none";
+            welcomeMessage.style.display = "block";
+            document.getElementById("welcome-subtitle").innerText = "Hệ thống quản trị người dùng & phân quyền.";
+        }
+    }
+
+    function setupHeader() {
+        const avatarUrl = currentUser.hinhAnh ? (AVATAR_URL + currentUser.hinhAnh) : "assets/img/profile-img.jpg";
+        document.getElementById("headerName").innerText = currentUser.tenDangNhap;
+        document.getElementById("headerAvatar").src = avatarUrl;
+        document.getElementById("headerFullName").innerText = currentUser.hoVaTen || currentUser.tenDangNhap;
+        document.getElementById("headerRole").innerText = currentUser.vaiTro ? currentUser.vaiTro.tenVaiTro : "Nhân viên";
+        document.getElementById("profileAvatar").src = avatarUrl;
+    }
+
+    function timeAgo(date) {
+        const seconds = Math.floor((new Date() - new Date(date)) / 1000);
+        let interval = seconds / 31536000;
+        if (interval > 1) return Math.floor(interval) + " năm trước";
+        interval = seconds / 2592000;
+        if (interval > 1) return Math.floor(interval) + " tháng trước";
+        interval = seconds / 86400;
+        if (interval > 1) return Math.floor(interval) + " ngày trước";
+        interval = seconds / 3600;
+        if (interval > 1) return Math.floor(interval) + " giờ trước";
+        interval = seconds / 60;
+        if (interval > 1) return Math.floor(interval) + " phút trước";
+        return "Vừa xong";
+    }
+
+    function formatMoney(amount) {
+        if (Math.abs(amount) >= 1000000000) return (amount / 1000000000).toFixed(1) + " Tỷ";
+        if (Math.abs(amount) >= 1000000) return (amount / 1000000).toFixed(1) + " Tr";
+        return new Intl.NumberFormat('vi-VN').format(amount) + "đ";
+    }
+
+    async function loadDashboardData() {
+        try {
+            const [
+                products, categories, accounts, customers, suppliers, orders, imports, exports, stock
+            ] = await Promise.all([
+                fetch(`${BASE_URL}/sanpham`).then(r => r.json()),
+                fetch(`${BASE_URL}/danhmuc`).then(r => r.json()).catch(() => []),
+                fetch(`${BASE_URL}/taikhoan`).then(r => r.json()).catch(() => []), 
+                fetch(`${BASE_URL}/khachhang`).then(r => r.json()),
+                fetch(`${BASE_URL}/nhacungcap`).then(r => r.json()).catch(() => []), 
+                fetch(`${BASE_URL}/donhang`).then(r => r.json()),
+                fetch(`${BASE_URL}/phieunhap`).then(r => r.json()),
+                fetch(`${BASE_URL}/phieuxuat`).then(r => r.json()),
+                fetch(`${BASE_URL}/tonkho`).then(r => r.json())
+            ]);
+
+            // 1. TÍNH TOÁN TÀI CHÍNH
+            let totalExpense = imports.reduce((sum, item) => sum + (item.tongTien || 0), 0);
+            let totalRevenue = exports.reduce((sum, item) => sum + (item.tongTien || 0), 0);
+
+            // Tính lợi nhuận
+            let productImportCost = {}; 
+            imports.forEach(pn => {
+                if (pn.chiTietPhieuNhaps) {
+                    pn.chiTietPhieuNhaps.forEach(ct => {
+                        let id = ct.sanPham.maSanPham;
+                        if (!productImportCost[id]) productImportCost[id] = { qty: 0, cost: 0 };
+                        productImportCost[id].qty += ct.soLuong;
+                        productImportCost[id].cost += (ct.soLuong * ct.donGiaNhap);
+                    });
+                }
+            });
+
+            let totalCOGS = 0;
+            exports.forEach(px => {
+                if (px.chiTietPhieuXuats) {
+                    px.chiTietPhieuXuats.forEach(ct => {
+                        let id = ct.sanPham.maSanPham;
+                        let importData = productImportCost[id];
+                        let avgImportPrice = (importData && importData.qty > 0) ? (importData.cost / importData.qty) : 0;
+                        totalCOGS += (ct.soLuong * avgImportPrice);
+                    });
+                }
+            });
+            let totalProfit = totalRevenue - totalCOGS;
+
+            document.getElementById('totalRevenue').innerText = formatMoney(totalRevenue);
+            document.getElementById('totalExpense').innerText = formatMoney(totalExpense);
+            document.getElementById('totalProfit').innerText = formatMoney(totalProfit);
+
+            // 2. SỐ LIỆU HOẠT ĐỘNG
+            document.getElementById('countSanPham').innerText = products.length;
+            document.getElementById('countDonHang').innerText = orders.length;
+            document.getElementById('countKhachHang').innerText = customers.length;
+            document.getElementById('countNCC').innerText = suppliers.length;
+
+            // 3. HOẠT ĐỘNG & THÔNG BÁO
+            myActivities = [];
+            imports.forEach(item => {
+                if ((item.nguoiNhap ? item.nguoiNhap.maTaiKhoan : '') === currentUser.maTaiKhoan) {
+                    myActivities.push({ time: new Date(item.ngayNhap), type: 'success', action: 'tạo phiếu nhập', code: item.maPhieuNhap });
+                }
+            });
+            exports.forEach(item => {
+                if ((item.nguoiXuat ? item.nguoiXuat.maTaiKhoan : '') === currentUser.maTaiKhoan) {
+                    myActivities.push({ time: new Date(item.ngayXuat), type: 'warning', action: 'tạo phiếu xuất', code: item.maPhieuXuat });
+                }
+            });
+            orders.forEach(item => {
+                const userLap = item.nguoiLap ? item.nguoiLap.maTaiKhoan : '';
+                if (userLap === currentUser.maTaiKhoan) {
+                    myActivities.push({ time: new Date(item.ngayLap), type: 'primary', action: 'lập đơn hàng', code: item.maDonHang });
+                }
+            });
+
+            myActivities.sort((a, b) => b.time - a.time);
+            renderActivities(myActivities);
+            renderNotifications(myActivities);
+
+            // 4. BIỂU ĐỒ TÀI CHÍNH (DOANH THU vs CHI PHÍ) - THEO NGÀY
+            const last7Days = [];
+            const revenueData = []; // Tiền xuất (Doanh thu)
+            const expenseData = []; // Tiền nhập (Chi phí)
+            
+            for (let i = 6; i >= 0; i--) {
+                const d = new Date();
+                d.setDate(d.getDate() - i);
+                const dayStr = d.toISOString().slice(0, 10); 
+                const label = d.toLocaleDateString('vi-VN', {day: '2-digit', month: '2-digit'});
+                last7Days.push(label);
+                
+                // Tính tổng tiền nhập trong ngày
+                const dailyImp = imports.filter(x => x.ngayNhap.startsWith(dayStr))
+                                      .reduce((sum, item) => sum + (item.tongTien || 0), 0);
+                expenseData.push(dailyImp);
+
+                // Tính tổng tiền xuất trong ngày
+                const dailyExp = exports.filter(x => x.ngayXuat.startsWith(dayStr))
+                                      .reduce((sum, item) => sum + (item.tongTien || 0), 0);
+                revenueData.push(dailyExp);
+            }
+
+            new ApexCharts(document.querySelector("#reportsChart"), {
+                series: [
+                    { name: 'Doanh Thu (Xuất)', data: revenueData },
+                    { name: 'Chi Phí (Nhập)', data: expenseData }
+                ],
+                chart: { height: 350, type: 'area', toolbar: { show: false } },
+                markers: { size: 4 },
+                colors: ['#4154f1', '#ff771d'], // Xanh (Thu), Cam (Chi)
+                fill: { type: "gradient", gradient: { shadeIntensity: 1, opacityFrom: 0.3, opacityTo: 0.4, stops: [0, 90, 100] } },
+                dataLabels: { enabled: false },
+                stroke: { curve: 'smooth', width: 2 },
+                xaxis: { categories: last7Days, tooltip: { enabled: false } },
+                yaxis: { labels: { formatter: (val) => formatMoney(val) } }, // Format trục Y thành tiền
+                tooltip: { y: { formatter: (val) => new Intl.NumberFormat('vi-VN').format(val) + 'đ' } }
+            }).render();
+
+            // 5. Biểu đồ Trạng thái Đơn hàng
+            const statusCounts = { 'Mới': 0, 'Chờ xử lý': 0, 'Đang giao': 0, 'Hoàn thành': 0, 'Đã hủy': 0 };
+            orders.forEach(o => { if(statusCounts[o.trangThai] !== undefined) statusCounts[o.trangThai]++; });
+            echarts.init(document.querySelector("#orderStatusChart")).setOption({
+                tooltip: { trigger: 'item' },
+                legend: { top: '5%', left: 'center' },
+                series: [{
+                    name: 'Trạng thái', type: 'pie', radius: ['40%', '70%'], avoidLabelOverlap: false,
+                    label: { show: false, position: 'center' },
+                    emphasis: { label: { show: true, fontSize: '18', fontWeight: 'bold' } },
+                    data: [
+                        { value: statusCounts['Chờ xử lý'] + statusCounts['Mới'], name: 'Mới/Chờ', itemStyle: { color: '#4154f1' } },
+                        { value: statusCounts['Đang giao'], name: 'Đang giao', itemStyle: { color: '#ff771d' } },
+                        { value: statusCounts['Hoàn thành'], name: 'Hoàn thành', itemStyle: { color: '#2eca6a' } },
+                        { value: statusCounts['Đã hủy'], name: 'Đã hủy', itemStyle: { color: '#ff4d4f' } }
+                    ]
+                }]
+            });
+
+            // 6. Top Sản phẩm bán chạy
+            let productSales = {};
+            orders.filter(o => o.trangThai === 'Hoàn thành').forEach(o => {
+                o.chiTietDonHangs.forEach(ct => {
+                    const name = ct.sanPham.tenSanPham;
+                    if(!productSales[name]) productSales[name] = 0;
+                    productSales[name] += ct.soLuong;
+                });
+            });
+            const topSelling = Object.entries(productSales).sort(([,a], [,b]) => b - a).slice(0, 5);
+            document.getElementById('topSellingBody').innerHTML = topSelling.map(([name, qty], index) => `
+                <tr><td><span class="rank-badge top-${index+1 <= 3 ? index+1 : 'other'}">${index+1}</span></td><td>${name}</td><td class="fw-bold text-success">${qty}</td></tr>
+            `).join('');
+
+            // 7. Cảnh báo hết hàng
+            const lowStock = stock.filter(s => s.soLuongTon < 10).slice(0, 5);
+            document.getElementById('lowStockTableBody').innerHTML = lowStock.map(s => `
+                <tr>
+                    <th scope="row"><img src="${s.sanPham.hinhAnh ? PHOTO_URL + s.sanPham.hinhAnh : 'https://via.placeholder.com/40'}" class="product-img-thumb"></th>
+                    <td><a href="#" class="text-primary fw-bold">${s.sanPham.tenSanPham}</a></td>
+                    <td class="text-center fw-bold text-${s.soLuongTon === 0 ? 'danger' : 'warning'}">${s.soLuongTon}</td>
+                    <td class="text-center"><span class="badge bg-${s.soLuongTon === 0 ? 'danger' : 'warning'}">${s.soLuongTon === 0 ? 'Hết hàng' : 'Sắp hết'}</span></td>
+                </tr>
+            `).join('');
+            
+            // 8. Top Khách hàng
+            let customerSpending = {};
+            orders.filter(o => o.trangThai === 'Hoàn thành').forEach(o => {
+                const name = o.khachHang ? o.khachHang.tenKhachHang : 'Khách lẻ';
+                if(!customerSpending[name]) customerSpending[name] = 0;
+                customerSpending[name] += o.tongTien;
+            });
+            const topCustomers = Object.entries(customerSpending).sort(([,a], [,b]) => b - a).slice(0, 5);
+            document.getElementById('topCustomerBody').innerHTML = topCustomers.map(([name, total]) => `
+                <tr><td>${name}</td><td class="text-primary fw-bold">${formatMoney(total)}</td></tr>
+            `).join('');
+
+            // 9. Biểu đồ Tồn kho theo Danh mục
+            let categoryStockCounts = {};
+            stock.forEach(s => {
+                let catName = (s.sanPham && s.sanPham.danhMuc) ? s.sanPham.danhMuc.tenDanhMuc : "Chưa phân loại";
+                if (!categoryStockCounts[catName]) categoryStockCounts[catName] = 0;
+                categoryStockCounts[catName] += s.soLuongTon;
+            });
+
+            let pieChartData = Object.keys(categoryStockCounts).map(key => {
+                return { value: categoryStockCounts[key], name: key };
+            });
+
+            echarts.init(document.querySelector("#categoryStockChart")).setOption({
+                tooltip: { trigger: 'item', formatter: '{b}: {c} sp ({d}%)' },
+                legend: { top: '5%', left: 'center' },
+                series: [{
+                    name: 'Danh mục',
+                    type: 'pie',
+                    radius: '70%', 
+                    center: ['50%', '55%'], 
+                    avoidLabelOverlap: false,
+                    itemStyle: { borderRadius: 0, borderColor: '#fff', borderWidth: 1 },
+                    label: { show: false, position: 'center' },
+                    emphasis: { label: { show: true, fontSize: '16', fontWeight: 'bold' } },
+                    labelLine: { show: false },
+                    data: pieChartData
+                }]
+            });
+
+        } catch (error) {
+            console.error("Lỗi tải dữ liệu Dashboard:", error);
+        }
+    }
+
+    function renderActivities(list) {
+        const container = document.getElementById('recentActivityBody');
+        if (list.length === 0) {
+            container.innerHTML = '<div class="text-center text-muted p-3">Chưa có hoạt động nào</div>';
+            return;
+        }
+        container.innerHTML = list.slice(0, 10).map(act => `
+            <div class="activity-item d-flex text-${act.type}">
+                <div class="activite-label">${timeAgo(act.time)}</div>
+                <div class="activity-content">Bạn đã ${act.action} <a href="#" class="fw-bold text-dark">${act.code}</a></div>
+            </div>
+        `).join('');
+    }
+
+    function renderNotifications(list) {
+        const notiList = document.getElementById('notificationList');
+        const notiBadge = document.getElementById('notificationBadge');
+        notiBadge.innerText = list.length;
+        let html = `<li class="dropdown-header">Bạn có ${list.length} thông báo mới</li>`;
+        list.slice(0, 4).forEach(act => {
+            let icon = act.type === 'success' ? 'bi-check-circle text-success' : (act.type === 'warning' ? 'bi-exclamation-circle text-warning' : 'bi-info-circle text-primary');
+            html += `<li><hr class="dropdown-divider"></li>
+            <li class="notification-item d-flex align-items-start p-2">
+              <i class="bi ${icon} me-2 fs-4"></i>
+              <div><h6 class="mb-0 font-weight-bold">Hoạt động mới</h6><p class="mb-0 small">Bạn đã ${act.action} <strong>${act.code}</strong></p><p class="text-muted small mb-0">${timeAgo(act.time)}</p></div>
+            </li>`;
+        });
+        notiList.innerHTML = html;
+    }
+
+    function searchDashboard() {
+        const keyword = document.getElementById('searchInput').value.toLowerCase();
+        if (!keyword) { renderActivities(myActivities); return; }
+        const filtered = myActivities.filter(a => a.code.toLowerCase().includes(keyword) || a.action.toLowerCase().includes(keyword));
+        renderActivities(filtered);
+    }
+
+    function showUserProfile() {
+        document.getElementById('profileId').innerText = currentUser.maTaiKhoan;
+        document.getElementById('profileName').innerText = currentUser.hoVaTen || currentUser.tenDangNhap;
+        document.getElementById('profileEmail').innerText = currentUser.email || "Chưa cập nhật";
+        document.getElementById('profilePhone').innerText = currentUser.sdt || "Chưa cập nhật";
+        userProfileModal.show();
+    }
+    function openSettingsModal() {
+        document.getElementById("darkModeSwitch").checked = localStorage.getItem("darkMode") === "true";
+        document.getElementById("fontSizeRange").value = localStorage.getItem("fontSize") || "14";
+        settingsModal.show();
+    }
+    function toggleDarkMode() {
+        const check = document.getElementById("darkModeSwitch").checked;
+        if(check) { document.body.classList.add("dark-mode"); localStorage.setItem("darkMode", "true"); } 
+        else { document.body.classList.remove("dark-mode"); localStorage.setItem("darkMode", "false"); }
+    }
+    function changeFontSize(val) {
+        document.documentElement.style.fontSize = val + "px"; document.body.style.fontSize = val + "px";
+        localStorage.setItem("fontSize", val);
+    }
+    function applySavedSettings() {
+        if(localStorage.getItem("darkMode") === "true") document.body.classList.add("dark-mode");
+        const fs = localStorage.getItem("fontSize");
+        if(fs) { document.documentElement.style.fontSize = fs + "px"; document.body.style.fontSize = fs + "px"; }
+    }
+    function logout() {
+        if(confirm("Bạn có chắc chắn muốn đăng xuất không?")) { localStorage.removeItem("currentUser"); window.location.href="login.html"; }
+    }
+  </script>
+
+</body>
+</html>

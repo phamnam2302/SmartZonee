@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <title>Thống kê Tồn kho - Smart Zone</title>
+  
+  <link href="assets/img/favicon.png" rel="icon">
+  <link href="assets/img/apple-touch-icon.png" rel="apple-touch-icon">
+  
+  <link href="https://fonts.gstatic.com" rel="preconnect">
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Nunito:300,300i,400,400i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i" rel="stylesheet">
+  
+  <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+  <link href="assets/vendor/boxicons/css/boxicons.min.css" rel="stylesheet">
+  <link href="assets/vendor/simple-datatables/style.css" rel="stylesheet">
+  <link href="assets/css/style.css" rel="stylesheet">
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+  <style>
+    /* --- Dark Mode & General Styles --- */
+    body { background-color: #f6f9ff; }
+    body.dark-mode { background-color: #111; color: #eee; }
+    body.dark-mode .card, body.dark-mode .header, body.dark-mode .sidebar, body.dark-mode .modal-content { background-color: #1a1a1a; color: #eee; border-color: #333; }
+    body.dark-mode .form-control, body.dark-mode .form-select { background-color: #2a2a2a; border-color: #444; color: #eee; }
+    body.dark-mode .table { color: #eee; border-color: #333; }
+    body.dark-mode .table-light th { background-color: #2a2a2a; color: #eee; border-color: #333; }
+    body.dark-mode .table-hover tbody tr:hover { color: #fff; background-color: #333; }
+    
+    /* --- Sidebar Customization --- */
+    .sidebar-nav .nav-content { padding-left: 20px; }
+    .sidebar-nav .nav-content a { display: flex; align-items: center; font-size: 14px; color: #012970; transition: 0.3s; padding: 10px 0; }
+    .sidebar-nav .nav-content a i { font-size: 8px; margin-right: 10px; border-radius: 50%; }
+    .sidebar-nav .nav-content a.active, .sidebar-nav .nav-content a:hover { color: #4154f1; }
+    .sidebar-nav .nav-content a.active i { background-color: #4154f1; }
+    body.dark-mode .sidebar-nav .nav-content a { color: #eee; }
+    
+    /* --- Spacing & Layout --- */
+    .card { border: none; border-radius: 10px; box-shadow: 0px 0 30px rgba(1, 41, 112, 0.1); margin-bottom: 30px; }
+    .chart-card { height: 100%; min-height: 420px; }
+    .pagetitle { margin-bottom: 25px; }
+    
+    /* --- Search Bar --- */
+    .search-bar { min-width: 360px; padding: 0 20px; }
+    .search-form { width: 100%; }
+    .search-form input {
+        border: 0; font-size: 14px; color: #012970; border: 1px solid rgba(1, 41, 112, 0.2);
+        padding: 7px 38px 7px 15px; border-radius: 50px; transition: 0.3s; width: 100%;
+    }
+    .search-form input:focus { outline: none; box-shadow: 0 0 10px 0 rgba(1, 41, 112, 0.15); border: 1px solid rgba(1, 41, 112, 0.3); }
+    .search-form button { border: 0; padding: 0; margin-left: -35px; background: none; }
+    .search-form button i { color: #012970; font-weight: bold; }
+    body.dark-mode .search-form input { background-color: #2a2a2a; color: #eee; border-color: #444; }
+    body.dark-mode .search-form button i { color: #eee; }
+
+    /* --- Product Thumb --- */
+    .product-thumb { 
+        width: 45px; height: 45px; object-fit: contain; 
+        border-radius: 6px; border: 1px solid #dee2e6; background: #fff; padding: 2px;
+    }
+    
+    /* --- Pagination --- */
+    .pagination .page-item.active .page-link { background-color: #4154f1; border-color: #4154f1; }
+    .pagination .page-link { color: #012970; cursor: pointer; border-radius: 50%; margin: 0 3px; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; }
+    .pagination .page-item.disabled .page-link { color: #6c757d; }
+    
+    /* --- Table --- */
+    .table td, .table th { vertical-align: middle; padding: 12px; }
+    #headerAvatar { width: 36px; height: 36px; object-fit: cover; border-radius: 50%; border: 1px solid #e0e0e0; }
+
+    /* --- Print Section --- */
+    #printSection { display: none; }
+  </style>
+</head>
+
+<body>
+
+  <header id="header" class="header fixed-top d-flex align-items-center">
+    <div class="d-flex align-items-center justify-content-between">
+      <a href="index.html" class="logo d-flex align-items-center">
+        <img src="assets/img/logo.png" alt="">
+        <span class="d-none d-lg-block">Smart Zone</span>
+      </a>
+      <i class="bi bi-list toggle-sidebar-btn"></i>
+    </div>
+
+    <div class="search-bar">
+      <form class="search-form d-flex align-items-center" onsubmit="event.preventDefault(); filterStock();">
+        <input type="text" id="searchInput" placeholder="Tìm Tên hoặc Mã sản phẩm..." oninput="toggleClearBtn()">
+        <button type="button" id="btnClearSearch" class="d-none" onclick="clearSearch()" style="margin-right: 5px;"><i class="bi bi-x-lg"></i></button>
+        <button type="button" onclick="filterStock()"><i class="bi bi-search"></i></button>
+      </form>
+    </div>
+
+    <nav class="header-nav ms-auto">
+      <ul class="d-flex align-items-center">
+        <li class="nav-item d-block d-lg-none"><a class="nav-link nav-icon search-bar-toggle " href="#"><i class="bi bi-search"></i></a></li>
+        <li class="nav-item dropdown pe-3">
+          <a class="nav-link nav-profile d-flex align-items-center pe-0" href="#" data-bs-toggle="dropdown">
+            <img src="assets/img/profile-img.jpg" alt="Profile" class="rounded-circle" id="headerAvatar">
+            <span class="d-none d-md-block dropdown-toggle ps-2" id="headerName">Admin</span>
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow profile">
+             <li class="dropdown-header"><h6 id="headerFullName">Quản trị viên</h6><span id="headerRole">Quản lý kho</span></li>
+             <li><hr class="dropdown-divider"></li>
+             <li><a class="dropdown-item d-flex align-items-center" href="#" onclick="showUserProfile()"><i class="bi bi-person"></i><span>Hồ sơ của bạn</span></a></li>
+             <li><hr class="dropdown-divider"></li>
+             <li><a class="dropdown-item d-flex align-items-center" href="#" onclick="openSettingsModal()"><i class="bi bi-gear"></i><span>Cài đặt hiển thị</span></a></li>
+             <li><hr class="dropdown-divider"></li>
+             <li><a class="dropdown-item d-flex align-items-center" href="#" onclick="logout()"><i class="bi bi-box-arrow-right"></i><span>Đăng xuất</span></a></li>
+          </ul>
+        </li>
+      </ul>
+    </nav>
+  </header>
+
+  <aside id="sidebar" class="sidebar">
+    <ul class="sidebar-nav" id="sidebar-nav">
+      
+      <li class="nav-item" id="menu-thongke">
+        <a class="nav-link collapsed" href="index.html">
+            <i class="bi bi-grid"></i><span>Thống kê</span>
+        </a>
+      </li>
+
+      <li class="nav-item" id="menu-hanghoa">
+        <a class="nav-link collapsed" data-bs-target="#hanghoa-nav" data-bs-toggle="collapse" href="#">
+            <i class="bi bi-box-seam"></i><span>Quản lý Hàng hóa</span><i class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="hanghoa-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
+            <li><a href="dsdanhmuc.html"><i class="bi bi-circle"></i>Danh sách Danh mục</a></li>
+            <li><a href="dssanpham.html"><i class="bi bi-circle"></i>Danh sách Sản phẩm</a></li>
+        </ul>
+      </li>
+      
+      <li class="nav-item" id="menu-kho">
+        <a class="nav-link" data-bs-target="#kho-nav" data-bs-toggle="collapse" href="#">
+          <i class="bi bi-house-door"></i><span>Quản lý Kho hàng</span><i class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="kho-nav" class="nav-content collapse show" data-bs-parent="#sidebar-nav">
+          <li><a href="dsphieunhap.html"><i class="bi bi-circle"></i>Danh sách Phiếu Nhập</a></li>
+          <li><a href="dsphieuxuat.html"><i class="bi bi-circle"></i>Danh sách Phiếu Xuất</a></li>
+          <li><a href="tonkho.html" class="active"><i class="bi bi-circle"></i>Thống kê Tồn kho</a></li>
+        </ul>
+      </li>
+
+      <li class="nav-item" id="menu-donhang">
+          <a class="nav-link collapsed" href="dsdonhang.html">
+              <i class="bi bi-cart-check"></i><span>Quản lý Đơn hàng</span>
+          </a>
+      </li>
+
+      <li class="nav-item" id="menu-khachhang">
+          <a class="nav-link collapsed" href="dskhachhang.html">
+              <i class="bi bi-people"></i><span>Quản lý Khách hàng</span>
+          </a>
+      </li>
+      
+      <li class="nav-item" id="menu-ncc">
+          <a class="nav-link collapsed" href="dsnhacungcap.html">
+              <i class="bi bi-truck"></i><span>Quản lý Nhà cung cấp</span>
+          </a>
+      </li>
+      
+      <li class="nav-item" id="menu-account">
+          <a class="nav-link collapsed" href="dsnguoidung.html">
+              <i class="bi bi-person-gear"></i><span id="label-account">Quản lý Tài khoản</span>
+          </a>
+      </li>
+
+      <li class="nav-item" id="menu-role">
+          <a class="nav-link collapsed" href="dsvaitro.html">
+              <i class="bi bi-shield-lock"></i><span>Quản lý Vai trò</span>
+          </a>
+      </li>
+
+    </ul>
+  </aside>
+
+  <main id="main" class="main">
+    <div class="pagetitle">
+      <h1>Thống kê Tồn kho</h1>
+      <nav>
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="index.html">Trang chủ</a></li>
+          <li class="breadcrumb-item">Kho hàng</li>
+          <li class="breadcrumb-item active">Tồn kho</li>
+        </ol>
+      </nav>
+    </div>
+
+    <section class="section">
+      
+      <div class="row mb-4">
+        <div class="col-lg-4">
+          <div class="card chart-card">
+            <div class="card-body">
+              <h5 class="card-title">Top 5 Tồn kho cao nhất</h5>
+              <div id="topStockChart"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-4">
+          <div class="card chart-card">
+            <div class="card-body">
+              <h5 class="card-title text-danger">Cảnh báo: Sắp hết hàng</h5>
+              <div id="lowStockChart"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-4">
+          <div class="card chart-card">
+            <div class="card-body">
+              <h5 class="card-title">Cơ cấu kho theo Danh mục</h5>
+              <div id="categoryChart"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-lg-12">
+          <div class="card">
+            <div class="card-body">
+              
+              <div class="d-flex justify-content-between align-items-center mb-4">
+                  <div class="d-flex align-items-center gap-3">
+                      <h5 class="card-title m-0 p-0">Chi tiết tồn kho</h5>
+                      <select id="filterStatus" class="form-select form-select-sm" style="width: 200px; border-radius: 20px;" onchange="filterStock()">
+                          <option value="">-- Tất cả trạng thái --</option>
+                          <option value="out">Hết hàng (0)</option>
+                          <option value="low">Sắp hết (1-10)</option>
+                          <option value="ok">Còn hàng (>10)</option>
+                      </select>
+                  </div>
+                  
+                  <button class="btn btn-danger btn-sm rounded-pill px-3" onclick="exportLowStockReport()">
+                      <i class="bi bi-file-earmark-pdf-fill me-1"></i> Báo cáo Hết & Sắp hết
+                  </button>
+              </div>
+              
+              <div class="table-responsive">
+                  <table class="table table-hover table-bordered">
+                    <thead class="table-light">
+                      <tr>
+                        <th class="text-center" style="width: 80px;">Ảnh</th>
+                        <th>Mã SP</th>
+                        <th>Tên Sản Phẩm</th>
+                        <th>Danh mục</th>
+                        <th class="text-center">Số lượng</th>
+                        <th class="text-center">Trạng thái</th>
+                        <th>Cập nhật cuối</th>
+                      </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                      </tbody>
+                  </table>
+              </div>
+
+              <div class="d-flex justify-content-between align-items-center mt-4">
+                  <div class="pagination-info" id="recordCount"></div>
+                  <nav aria-label="Page navigation">
+                    <ul class="pagination justify-content-end mb-0" id="paginationControls"></ul>
+                  </nav>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div id="printSection">
+      <div class="p-4" style="font-family: 'Times New Roman', serif;">
+          <h2 class="text-center text-uppercase fw-bold mb-4">Báo Cáo Tình Trạng Hàng Hóa</h2>
+          <p class="text-center fst-italic mb-4">Ngày xuất: <span id="reportDate"></span></p>
+          
+          <h4 class="fw-bold text-danger border-bottom pb-2 mb-3">DANH SÁCH SẢN PHẨM HẾT HÀNG & CẦN NHẬP THÊM</h4>
+          
+          <table class="table table-bordered" style="width: 100%; border-collapse: collapse;">
+              <thead style="background-color: #f2f2f2;">
+                  <tr>
+                      <th style="border: 1px solid #000; padding: 8px;">STT</th>
+                      <th style="border: 1px solid #000; padding: 8px;">Mã SP</th>
+                      <th style="border: 1px solid #000; padding: 8px;">Tên Sản Phẩm</th>
+                      <th style="border: 1px solid #000; padding: 8px;">Danh mục</th>
+                      <th style="border: 1px solid #000; padding: 8px; text-align: center;">Tồn kho</th>
+                      <th style="border: 1px solid #000; padding: 8px; text-align: center;">Trạng thái</th>
+                  </tr>
+              </thead>
+              <tbody id="reportTableBody">
+                  </tbody>
+          </table>
+          <div class="mt-5 d-flex justify-content-end">
+              <div class="text-center" style="margin-right: 50px;">
+                  <p class="fw-bold">Người lập báo cáo</p>
+                  <p class="fst-italic">(Ký và ghi rõ họ tên)</p>
+                  <br><br><br>
+                  <p id="reportCreator"></p>
+              </div>
+          </div>
+      </div>
+  </div>
+
+  <div class="modal fade" id="userProfileModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Hồ sơ của bạn</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body text-center"><img src="" id="profileAvatar" class="rounded-circle mb-3" style="width: 100px; height: 100px; object-fit: cover; border: 3px solid #0d6efd;"><h4 id="profileName" class="fw-bold"></h4><p id="profileRole" class="text-muted mb-3"></p><div class="text-start px-3"><p><strong>Mã TK:</strong> <span id="profileId"></span></p><p><strong>Email:</strong> <span id="profileEmail"></span></p><p><strong>SĐT:</strong> <span id="profilePhone"></span></p></div></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button></div></div></div></div>
+  <div class="modal fade" id="settingsModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h5 class="modal-title"><i class="bi bi-gear-fill me-2"></i>Cài đặt hiển thị</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="d-flex justify-content-between align-items-center mb-4"><div><h6 class="mb-0 fw-bold">Chế độ tối</h6></div><div class="form-check form-switch"><input class="form-check-input" type="checkbox" id="darkModeSwitch" onchange="toggleDarkMode()"></div></div><hr><div class="mb-3"><h6 class="mb-2 fw-bold">Kích thước chữ</h6><input type="range" class="form-range" min="12" max="20" step="1" id="fontSizeRange" oninput="changeFontSize(this.value)"><div class="d-flex justify-content-between small"><span>Nhỏ</span><span id="fontSizeValue">14px</span><span>Lớn</span></div></div></div><div class="modal-footer"><button type="button" class="btn btn-primary" data-bs-dismiss="modal">Xong</button></div></div></div></div>
+
+  <footer id="footer" class="footer"><div class="copyright">&copy; SmartZone</div></footer>
+  <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+
+  <script src="assets/vendor/apexcharts/apexcharts.min.js"></script>
+  <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="assets/js/main.js"></script>
+
+  <script>
+    const BASE_URL = "http://localhost:8080/api";
+    const PHOTO_URL = "http://localhost:8080/photos/sanpham/";
+    const AVATAR_URL = "http://localhost:8080/photos/taikhoan/";
+
+    let originalData = []; // Dữ liệu gốc (Đã merge)
+    let currentFilteredList = []; // Dữ liệu sau khi lọc
+    
+    let currentPage = 1;
+    const itemsPerPage = 10;
+
+    const currentUserStr = localStorage.getItem("currentUser");
+    if (!currentUserStr) window.location.href = "login.html";
+    const currentUser = JSON.parse(currentUserStr);
+
+    var userProfileModal = new bootstrap.Modal(document.getElementById('userProfileModal'));
+    var settingsModal = new bootstrap.Modal(document.getElementById('settingsModal'));
+
+    document.addEventListener("DOMContentLoaded", function() {
+        setupHeader();
+        applyRolePermissions();
+        loadStockData();
+        applySavedSettings();
+    });
+
+    // --- HÀM PHÂN QUYỀN ---
+    function applyRolePermissions() {
+        const roleName = currentUser.vaiTro ? currentUser.vaiTro.tenVaiTro : "";
+        
+        const menuThongKe = document.getElementById("menu-thongke");
+        const menuHangHoa = document.getElementById("menu-hanghoa");
+        const menuKho = document.getElementById("menu-kho");
+        const menuDonHang = document.getElementById("menu-donhang");
+        const menuKhachHang = document.getElementById("menu-khachhang");
+        const menuNCC = document.getElementById("menu-ncc");
+        const menuAccount = document.getElementById("menu-account");
+        const menuRole = document.getElementById("menu-role");
+        const labelAccount = document.getElementById("label-account");
+
+        // 1. STAFF
+        if (roleName === "Staff" || roleName === "Nhân viên" || roleName === "Kho") {
+            if(menuThongKe) menuThongKe.style.display = "none";
+            if(menuNCC) menuNCC.style.display = "none";
+            if(menuAccount) menuAccount.style.display = "none";
+            if(menuRole) menuRole.style.display = "none";
+        }
+        
+        // 2. LEADER
+        else if (roleName === "Leader" || roleName === "Trưởng nhóm" || roleName === "Quản lý") {
+            if(menuThongKe) menuThongKe.style.display = "none";
+            if(menuAccount) menuAccount.style.display = "none";
+            if(menuRole) menuRole.style.display = "none";
+        }
+
+        // 3. BOSS
+        else if (roleName === "Boss" || roleName === "Giám đốc") {
+            if (menuAccount) {
+                if(labelAccount) labelAccount.innerText = "Quản lý Nhân sự";
+                const icon = menuAccount.querySelector("a i");
+                if(icon) { icon.classList.remove("bi-person-gear"); icon.classList.add("bi-people-fill"); }
+            }
+            if(menuRole) menuRole.style.display = "none";
+        }
+
+        // 4. ADMIN
+        else if (roleName === "Admin" || roleName === "Quản trị viên") {
+            if(menuThongKe) menuThongKe.style.display = "none";
+            if(menuHangHoa) menuHangHoa.style.display = "none";
+            if(menuKho) menuKho.style.display = "none";
+            if(menuDonHang) menuDonHang.style.display = "none";
+            if(menuKhachHang) menuKhachHang.style.display = "none";
+            if(menuNCC) menuNCC.style.display = "none";
+            
+            if(menuAccount) menuAccount.style.display = "block";
+            if(menuRole) menuRole.style.display = "block";
+        }
+    }
+
+    function setupHeader() {
+        const avatarUrl = currentUser.hinhAnh ? (AVATAR_URL + currentUser.hinhAnh) : "assets/img/profile-img.jpg";
+        document.getElementById("headerName").innerText = currentUser.tenDangNhap;
+        document.getElementById("headerAvatar").src = avatarUrl;
+        document.getElementById("headerFullName").innerText = currentUser.hoVaTen || currentUser.tenDangNhap;
+        document.getElementById("headerRole").innerText = currentUser.vaiTro ? currentUser.vaiTro.tenVaiTro : "Nhân viên";
+        document.getElementById("profileAvatar").src = avatarUrl;
+    }
+
+    // --- LOGIC DỮ LIỆU TỒN KHO (QUAN TRỌNG: MERGE SẢN PHẨM + KHO) ---
+    async function loadStockData() {
+        try {
+            const [products, stocks] = await Promise.all([
+                fetch(`${BASE_URL}/sanpham`).then(r => r.json()),
+                fetch(`${BASE_URL}/tonkho`).then(r => r.json())
+            ]);
+
+            // 1. Tạo Map tồn kho { maSP: objectStock }
+            const stockMap = {};
+            stocks.forEach(s => {
+                if(s.sanPham) stockMap[s.sanPham.maSanPham] = s;
+            });
+
+            // 2. Ghép dữ liệu: Duyệt qua danh sách SẢN PHẨM
+            originalData = products.map(p => {
+                const stockInfo = stockMap[p.maSanPham];
+                return {
+                    sanPham: p,
+                    soLuongTon: stockInfo ? stockInfo.soLuongTon : 0, // Nếu chưa có tồn kho => 0
+                    ngayCapNhatCuoi: stockInfo ? stockInfo.ngayCapNhatCuoi : null
+                };
+            });
+
+            // 3. Sắp xếp: Hết hàng (0) lên đầu, sau đó tăng dần
+            originalData.sort((a, b) => a.soLuongTon - b.soLuongTon);
+
+            currentFilteredList = originalData;
+            
+            displayCurrentPage(); 
+            renderCharts(originalData);
+
+        } catch (err) {
+            console.error("Lỗi tải dữ liệu:", err);
+        }
+    }
+
+    // --- LOGIC TÌM KIẾM & LỌC ---
+    function filterStock() {
+        let keyword = document.getElementById("searchInput").value.toLowerCase().trim();
+        let statusFilter = document.getElementById("filterStatus").value;
+
+        toggleClearBtn();
+
+        currentFilteredList = originalData.filter(item => {
+            // Lọc theo Tên/Mã
+            const nameMatch = item.sanPham.tenSanPham.toLowerCase().includes(keyword);
+            const codeMatch = item.sanPham.maSanPham.toLowerCase().includes(keyword);
+            const textMatch = nameMatch || codeMatch;
+
+            // Lọc theo Trạng thái
+            let statusMatch = true;
+            if (statusFilter === "out") statusMatch = (item.soLuongTon === 0);
+            else if (statusFilter === "low") statusMatch = (item.soLuongTon > 0 && item.soLuongTon <= 10);
+            else if (statusFilter === "ok") statusMatch = (item.soLuongTon > 10);
+
+            return textMatch && statusMatch;
+        });
+
+        currentPage = 1; // Reset về trang 1
+        displayCurrentPage();
+    }
+
+    function toggleClearBtn() {
+        const val = document.getElementById("searchInput").value;
+        const btn = document.getElementById("btnClearSearch");
+        if(val.trim().length > 0) btn.classList.remove("d-none"); 
+        else btn.classList.add("d-none");
+    }
+
+    function clearSearch() {
+        document.getElementById("searchInput").value = "";
+        document.getElementById("filterStatus").value = "";
+        document.getElementById("searchInput").focus();
+        toggleClearBtn();
+        filterStock();
+    }
+
+    // --- LOGIC PHÂN TRANG ---
+    function displayCurrentPage() {
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+        const paginatedItems = currentFilteredList.slice(startIndex, endIndex);
+
+        renderTable(paginatedItems);
+        renderPaginationControls();
+        
+        document.getElementById("recordCount").innerText = `Hiển thị ${paginatedItems.length} / ${currentFilteredList.length} sản phẩm`;
+    }
+
+    function renderPaginationControls() {
+        const paginationContainer = document.getElementById("paginationControls");
+        paginationContainer.innerHTML = "";
+
+        const totalPages = Math.ceil(currentFilteredList.length / itemsPerPage);
+        if (totalPages <= 1) return;
+
+        // Prev
+        let prevClass = currentPage === 1 ? "disabled" : "";
+        paginationContainer.insertAdjacentHTML('beforeend', `<li class="page-item ${prevClass}"><a class="page-link" onclick="changePage(${currentPage - 1})">&laquo;</a></li>`);
+
+        // Pages
+        for (let i = 1; i <= totalPages; i++) {
+            let activeClass = i === currentPage ? "active" : "";
+            paginationContainer.insertAdjacentHTML('beforeend', `<li class="page-item ${activeClass}"><a class="page-link" onclick="changePage(${i})">${i}</a></li>`);
+        }
+
+        // Next
+        let nextClass = currentPage === totalPages ? "disabled" : "";
+        paginationContainer.insertAdjacentHTML('beforeend', `<li class="page-item ${nextClass}"><a class="page-link" onclick="changePage(${currentPage + 1})">&raquo;</a></li>`);
+    }
+
+    function changePage(page) {
+        const totalPages = Math.ceil(currentFilteredList.length / itemsPerPage);
+        if (page < 1 || page > totalPages) return;
+        currentPage = page;
+        displayCurrentPage();
+    }
+
+    function renderTable(list) {
+        const tbody = document.getElementById("tableBody");
+        let html = "";
+        if (list.length === 0) html = '<tr><td colspan="7" class="text-center">Không tìm thấy dữ liệu</td></tr>';
+        else {
+            list.forEach(item => {
+                const sp = item.sanPham;
+                const img = sp.hinhAnh ? (PHOTO_URL + sp.hinhAnh) : "https://via.placeholder.com/40x40";
+                const date = item.ngayCapNhatCuoi ? new Date(item.ngayCapNhatCuoi).toLocaleDateString('vi-VN') : "Chưa cập nhật";
+                
+                let statusBadge = "";
+                if (item.soLuongTon === 0) statusBadge = '<span class="badge bg-danger">Hết hàng</span>';
+                else if (item.soLuongTon <= 10) statusBadge = '<span class="badge bg-warning text-dark">Sắp hết</span>';
+                else statusBadge = '<span class="badge bg-success">Còn hàng</span>';
+
+                html += `
+                    <tr>
+                        <td class="text-center"><img src="${img}" class="product-thumb"></td>
+                        <td>${sp.maSanPham}</td>
+                        <td class="fw-bold text-primary">${sp.tenSanPham}</td>
+                        <td>${sp.danhMuc ? sp.danhMuc.tenDanhMuc : 'N/A'}</td>
+                        <td class="text-center fw-bold fs-6">${item.soLuongTon}</td>
+                        <td class="text-center">${statusBadge}</td>
+                        <td>${date}</td>
+                    </tr>
+                `;
+            });
+        }
+        tbody.innerHTML = html;
+    }
+
+    function renderCharts(data) {
+        // 1. Top 5 Cao Nhất
+        const top5 = [...data].sort((a,b) => b.soLuongTon - a.soLuongTon).slice(0, 5);
+        new ApexCharts(document.querySelector("#topStockChart"), {
+            series: [{ name: 'Số lượng', data: top5.map(i => i.soLuongTon) }],
+            chart: { type: 'bar', height: 300 },
+            xaxis: { categories: top5.map(i => i.sanPham.tenSanPham) },
+            colors: ['#4154f1']
+        }).render();
+
+        // 2. Cảnh báo thấp (Dưới 10) - Đã bao gồm 0
+        const lowStock = data.filter(i => i.soLuongTon <= 10).slice(0, 5);
+        new ApexCharts(document.querySelector("#lowStockChart"), {
+            series: [{ name: 'Số lượng', data: lowStock.map(i => i.soLuongTon) }],
+            chart: { type: 'bar', height: 300 },
+            plotOptions: { bar: { horizontal: true } },
+            xaxis: { categories: lowStock.map(i => i.sanPham.tenSanPham) },
+            colors: ['#dc3545']
+        }).render();
+
+        // 3. Danh mục
+        let catMap = {};
+        data.forEach(i => {
+            let catName = i.sanPham.danhMuc ? i.sanPham.danhMuc.tenDanhMuc : "Khác";
+            catMap[catName] = (catMap[catName] || 0) + i.soLuongTon;
+        });
+        new ApexCharts(document.querySelector("#categoryChart"), {
+            series: Object.values(catMap),
+            chart: { type: 'donut', height: 300 },
+            labels: Object.keys(catMap),
+            legend: { position: 'bottom' }
+        }).render();
+    }
+
+    // --- XUẤT BÁO CÁO PDF ---
+    function exportLowStockReport() {
+        // 1. Lọc các sản phẩm <= 10 (Bao gồm cả 0)
+        let lowStockItems = originalData.filter(item => item.soLuongTon <= 10);
+        
+        if (lowStockItems.length === 0) {
+            alert("Hiện tại không có sản phẩm nào hết hoặc sắp hết hàng!");
+            return;
+        }
+
+        document.getElementById("reportDate").innerText = new Date().toLocaleDateString('vi-VN');
+        document.getElementById("reportCreator").innerText = currentUser.hoVaTen || currentUser.tenDangNhap;
+
+        const tbody = document.getElementById("reportTableBody");
+        let html = "";
+        lowStockItems.forEach((item, index) => {
+            let statusText = "";
+            let color = "";
+            
+            if(item.soLuongTon === 0) {
+                statusText = "HẾT HÀNG";
+                color = "red"; 
+            } else {
+                statusText = "Sắp hết";
+                color = "#d35400"; 
+            }
+
+            html += `
+                <tr>
+                    <td style="border: 1px solid #000; padding: 8px; text-align: center;">${index + 1}</td>
+                    <td style="border: 1px solid #000; padding: 8px;">${item.sanPham.maSanPham}</td>
+                    <td style="border: 1px solid #000; padding: 8px;">${item.sanPham.tenSanPham}</td>
+                    <td style="border: 1px solid #000; padding: 8px;">${item.sanPham.danhMuc ? item.sanPham.danhMuc.tenDanhMuc : 'N/A'}</td>
+                    <td style="border: 1px solid #000; padding: 8px; text-align: center; font-weight: bold; color: ${color};">${item.soLuongTon}</td>
+                    <td style="border: 1px solid #000; padding: 8px; text-align: center; font-weight: bold; color: ${color};">${statusText}</td>
+                </tr>
+            `;
+        });
+        tbody.innerHTML = html;
+
+        const element = document.getElementById('printSection');
+        element.style.display = 'block'; 
+        html2pdf().set({
+            margin: 10,
+            filename: `BaoCao_HetHang_${new Date().getTime()}.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2 },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        }).from(element).save().then(() => {
+            element.style.display = 'none'; 
+        });
+    }
+
+    function showUserProfile() {
+        document.getElementById('profileId').innerText = currentUser.maTaiKhoan;
+        document.getElementById('profileName').innerText = currentUser.hoVaTen || currentUser.tenDangNhap;
+        document.getElementById('profileEmail').innerText = currentUser.email || "Chưa cập nhật";
+        document.getElementById('profilePhone').innerText = currentUser.sdt || "Chưa cập nhật";
+        userProfileModal.show();
+    }
+    function openSettingsModal() {
+        document.getElementById("darkModeSwitch").checked = localStorage.getItem("darkMode") === "true";
+        document.getElementById("fontSizeRange").value = localStorage.getItem("fontSize") || "14";
+        settingsModal.show();
+    }
+    function toggleDarkMode() {
+        const check = document.getElementById("darkModeSwitch").checked;
+        if(check) { document.body.classList.add("dark-mode"); localStorage.setItem("darkMode", "true"); } 
+        else { document.body.classList.remove("dark-mode"); localStorage.setItem("darkMode", "false"); }
+    }
+    function changeFontSize(val) {
+        document.documentElement.style.fontSize = val + "px"; document.body.style.fontSize = val + "px";
+        localStorage.setItem("fontSize", val);
+    }
+    function applySavedSettings() {
+        if(localStorage.getItem("darkMode") === "true") document.body.classList.add("dark-mode");
+        const fs = localStorage.getItem("fontSize");
+        if(fs) { document.documentElement.style.fontSize = fs + "px"; document.body.style.fontSize = fs + "px"; }
+    }
+    function logout() {
+        if(confirm("Đăng xuất?")) { localStorage.removeItem("currentUser"); window.location.href="login.html"; }
+    }
+  </script>
+
+</body>
+</html>
