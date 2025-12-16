@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <title>Đăng nhập - Smart Zone</title>
+  <link href="assets/img/favicon.png" rel="icon">
+  <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="assets/css/style.css" rel="stylesheet">
+
+  <style>
+      body { background-color: #f6f9ff; display: flex; align-items: center; justify-content: center; height: 100vh; }
+      .card { border: none; border-radius: 10px; box-shadow: 0px 0 30px rgba(1, 41, 112, 0.1); }
+      .logo img { max-height: 50px; margin-right: 10px; }
+      .logo span { font-size: 26px; font-weight: 700; color: #012970; }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-4 col-md-6 d-flex flex-column align-items-center justify-content-center">
+
+        <div class="d-flex justify-content-center py-4">
+          <a href="#" class="logo d-flex align-items-center w-auto">
+            <img src="assets/img/logo.png" alt="">
+            <span class="d-none d-lg-block">Smart Zone</span>
+          </a>
+        </div>
+
+        <div class="card mb-3">
+          <div class="card-body">
+            <div class="pt-4 pb-2">
+              <h5 class="card-title text-center pb-0 fs-4">Đăng nhập hệ thống</h5>
+              <p class="text-center small">Nhập tên đăng nhập/email và mật khẩu</p>
+            </div>
+
+            <form class="row g-3 needs-validation" onsubmit="event.preventDefault(); handleLogin();">
+
+              <div class="col-12">
+                <label for="yourUsername" class="form-label">Tài khoản</label>
+                <div class="input-group has-validation">
+                  <input type="text" name="username" class="form-control" id="yourUsername" placeholder="Tên đăng nhập hoặc Email" required>
+                </div>
+              </div>
+
+              <div class="col-12">
+                <label for="yourPassword" class="form-label">Mật khẩu</label>
+                <input type="password" name="password" class="form-control" id="yourPassword" required>
+              </div>
+
+              <div class="col-12">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" name="remember" value="true" id="rememberMe">
+                  <label class="form-check-label" for="rememberMe">Ghi nhớ đăng nhập</label>
+                </div>
+              </div>
+
+              <div class="col-12">
+                 <div id="errorMessage" class="alert alert-danger d-none p-2 text-center small"></div>
+              </div>
+
+              <div class="col-12">
+                <button class="btn btn-primary w-100" type="submit">Đăng nhập</button>
+              </div>
+            </form>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+      const API_LOGIN = "http://localhost:8080/api/taikhoan/login";
+
+      // BỔ SUNG: Tự động điền thông tin khi tải trang nếu đã lưu
+      document.addEventListener("DOMContentLoaded", function() {
+          const savedUser = localStorage.getItem("saved_username");
+          const savedPass = localStorage.getItem("saved_password");
+          
+          if (savedUser && savedPass) {
+              document.getElementById('yourUsername').value = savedUser;
+              document.getElementById('yourPassword').value = savedPass;
+              document.getElementById('rememberMe').checked = true;
+          }
+      });
+
+      function handleLogin() {
+          const taiKhoan = document.getElementById('yourUsername').value.trim();
+          const matKhau = document.getElementById('yourPassword').value.trim();
+          const isRemember = document.getElementById('rememberMe').checked; // Lấy trạng thái checkbox
+          
+          if(!taiKhoan || !matKhau) {
+              showError("Vui lòng nhập đầy đủ thông tin!");
+              return;
+          }
+
+          const data = { taiKhoan: taiKhoan, matKhau: matKhau };
+
+          fetch(API_LOGIN, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(data)
+          })
+          .then(async res => {
+              if (res.ok) {
+                  return res.json();
+              } else {
+                  let text = await res.text();
+                  throw new Error(text);
+              }
+          })
+          .then(user => {
+              // 1. Lưu thông tin user đăng nhập hiện tại (Session)
+              localStorage.setItem("currentUser", JSON.stringify(user));
+              
+              // 2. Xử lý "Nhớ tài khoản"
+              if (isRemember) {
+                  localStorage.setItem("saved_username", taiKhoan);
+                  localStorage.setItem("saved_password", matKhau); 
+                  // Lưu ý: Lưu mật khẩu ở localStorage không bảo mật tuyệt đối, 
+                  // nhưng phù hợp với yêu cầu bài tập/đồ án cơ bản.
+              } else {
+                  // Nếu người dùng bỏ tích, xóa thông tin đã lưu cũ (nếu có)
+                  localStorage.removeItem("saved_username");
+                  localStorage.removeItem("saved_password");
+              }
+
+              // 3. Chuyển hướng
+              window.location.href = "index.html";
+          })
+          .catch(err => {
+              showError("Đăng nhập thất bại: " + err.message);
+          });
+      }
+
+      function showError(msg) {
+          const errorBox = document.getElementById('errorMessage');
+          errorBox.innerText = msg;
+          errorBox.classList.remove('d-none');
+      }
+  </script>
+
+</body>
+</html>

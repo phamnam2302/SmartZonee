@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <title>Quản lý Tài khoản - Smart Zone</title>
+  
+  <link href="assets/img/favicon.png" rel="icon">
+  <link href="assets/img/apple-touch-icon.png" rel="apple-touch-icon">
+  
+  <link href="https://fonts.gstatic.com" rel="preconnect">
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Nunito:300,300i,400,400i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i" rel="stylesheet">
+  
+  <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+  <link href="assets/vendor/boxicons/css/boxicons.min.css" rel="stylesheet">
+  <link href="assets/vendor/simple-datatables/style.css" rel="stylesheet">
+  <link href="assets/css/style.css" rel="stylesheet">
+
+  <style>
+    /* --- CSS CHUNG --- */
+    .pagination-info { color: #6c757d; font-size: 0.9rem; }
+    .table th { white-space: nowrap; vertical-align: middle; font-weight: 600; }
+    .table td { vertical-align: middle; }
+    .action-col { white-space: nowrap; width: 100px; text-align: center;}
+    .avatar-img { width: 40px; height: 40px; object-fit: cover; border-radius: 50%; border: 2px solid #e9ecef; }
+    
+    #headerAvatar { width: 36px; height: 36px; object-fit: cover; border-radius: 50%; border: 1px solid #e0e0e0; }
+    #profileAvatar { object-fit: cover; border: 3px solid #0d6efd; }
+    #previewContainer { display: none; text-align: center; margin-top: 10px; }
+    #previewImg { width: 100px; height: 100px; object-fit: cover; border-radius: 50%; border: 1px solid #ddd; }
+
+    /* --- SEARCH BAR --- */
+    .search-bar { min-width: 360px; padding: 0 20px; }
+    .search-form { width: 100%; border: 1px solid rgba(1, 41, 112, 0.2); padding: 0px 10px; border-radius: 4px; display: flex; align-items: center; background-color: #fff; transition: 0.3s; }
+    .search-form:focus-within { border-color: #0d6efd; box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.1); }
+    .search-form input { border: none !important; outline: none !important; box-shadow: none !important; padding: 4px 8px; width: 100%; background: transparent; color: #012970; font-size: 14px; }
+    .search-form button[title="Search"] { border: 0; padding: 0; margin-left: 8px; background: transparent; color: #012970; display: flex; align-items: center; }
+    #btnClearSearch { border: none; background: transparent; color: #dc3545; font-size: 10px; padding: 0 5px; display: flex; align-items: center; cursor: pointer; transition: 0.2s; }
+    
+    /* --- PAGINATION --- */
+    .pagination .page-item.active .page-link { background-color: #0d6efd; border-color: #0d6efd; }
+    .pagination .page-link { color: #012970; cursor: pointer; }
+    .pagination .page-item.disabled .page-link { color: #6c757d; }
+
+    /* --- DARK MODE --- */
+    body.dark-mode { background-color: #1a1a2e; color: #e0e0e0; }
+    body.dark-mode .header { background-color: #16213e; box-shadow: 0px 2px 20px rgba(0, 0, 0, 0.4); }
+    body.dark-mode .sidebar, body.dark-mode .card, body.dark-mode .modal-content { background-color: #16213e; color: #fff; border-color: #2c3e50; }
+    body.dark-mode .form-control, body.dark-mode .form-select { background-color: #0f3460; border-color: #2c3e50; color: #fff; }
+    body.dark-mode .table { color: #e0e0e0; border-color: #2c3e50; }
+    body.dark-mode .table-light th { background-color: #0f3460; color: #fff; border-color: #2c3e50; }
+    body.dark-mode .table-hover tbody tr:hover { color: #fff; background-color: #2c3e50; }
+    body.dark-mode .search-form { background-color: #16213e; border-color: #555; }
+    body.dark-mode .search-form input { color: #fff; }
+    body.dark-mode .search-form button { color: #fff; }
+    body.dark-mode .nav-link.collapsed { color: #e0e0e0; background: transparent; }
+    body.dark-mode .dropdown-menu { background-color: #16213e; border: 1px solid #444; }
+    body.dark-mode .dropdown-item { color: #e0e0e0; }
+    body.dark-mode .dropdown-item:hover { background-color: #0f3460; }
+    body.dark-mode .pagination .page-link { background-color: #16213e; border-color: #2c3e50; color: #e0e0e0; }
+    body.dark-mode .pagination .page-item.active .page-link { background-color: #0d6efd; border-color: #0d6efd; color: #fff; }
+  </style>
+</head>
+
+<body>
+
+  <header id="header" class="header fixed-top d-flex align-items-center">
+    <div class="d-flex align-items-center justify-content-between">
+      <a href="index.html" class="logo d-flex align-items-center">
+        <img src="assets/img/logo.png" alt="">
+        <span class="d-none d-lg-block">Smart Zone</span>
+      </a>
+      <i class="bi bi-list toggle-sidebar-btn"></i>
+    </div>
+
+    <div class="search-bar">
+      <form class="search-form" onsubmit="event.preventDefault(); searchAccounts();">
+        <input type="text" id="searchInput" name="query" placeholder="Tìm kiếm..." title="Enter search keyword" oninput="toggleClearBtn()">
+        <button type="button" id="btnClearSearch" class="d-none" onclick="clearSearch()" title="Xóa tìm kiếm">
+            <i class="bi bi-x-lg"></i>
+        </button>
+        <button type="button" onclick="searchAccounts()" title="Search">
+            <i class="bi bi-search"></i>
+        </button>
+      </form>
+    </div>
+
+    <nav class="header-nav ms-auto">
+      <ul class="d-flex align-items-center">
+        <li class="nav-item d-block d-lg-none"><a class="nav-link nav-icon search-bar-toggle " href="#"><i class="bi bi-search"></i></a></li>
+        <li class="nav-item dropdown pe-3">
+          <a class="nav-link nav-profile d-flex align-items-center pe-0" href="#" data-bs-toggle="dropdown">
+            <img src="assets/img/profile-img.jpg" alt="Profile" class="rounded-circle" id="headerAvatar">
+            <span class="d-none d-md-block dropdown-toggle ps-2" id="headerName">Admin</span>
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow profile">
+            <li class="dropdown-header"><h6 id="headerFullName">Quản trị viên</h6><span id="headerRole">Quản lý kho</span></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item d-flex align-items-center" href="#" onclick="showUserProfile()"><i class="bi bi-person"></i><span>Hồ sơ của bạn</span></a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item d-flex align-items-center" href="#" onclick="openSettingsModal()"><i class="bi bi-gear"></i><span>Cài đặt hiển thị</span></a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item d-flex align-items-center" href="#" onclick="logout()"><i class="bi bi-box-arrow-right"></i><span>Đăng xuất</span></a></li>
+          </ul>
+        </li>
+      </ul>
+    </nav>
+  </header>
+
+  <aside id="sidebar" class="sidebar">
+    <ul class="sidebar-nav" id="sidebar-nav">
+      
+      <li class="nav-item" id="menu-thongke">
+        <a class="nav-link collapsed" href="index.html">
+            <i class="bi bi-grid"></i><span>Thống kê</span>
+        </a>
+      </li>
+
+      <li class="nav-item" id="menu-hanghoa">
+        <a class="nav-link collapsed" data-bs-target="#hanghoa-nav" data-bs-toggle="collapse" href="#">
+            <i class="bi bi-box-seam"></i><span>Quản lý Hàng hóa</span><i class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="hanghoa-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
+            <li><a href="dsdanhmuc.html"><i class="bi bi-circle"></i>Danh sách Danh mục</a></li>
+            <li><a href="dssanpham.html"><i class="bi bi-circle"></i>Danh sách Sản phẩm</a></li>
+        </ul>
+      </li>
+      
+      <li class="nav-item" id="menu-kho">
+        <a class="nav-link collapsed" data-bs-target="#kho-nav" data-bs-toggle="collapse" href="#">
+          <i class="bi bi-house-door"></i><span>Quản lý Kho hàng</span><i class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="kho-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
+          <li><a href="dsphieunhap.html">Danh sách Phiếu Nhập</a></li>
+          <li><a href="dsphieuxuat.html">Danh sách Phiếu Xuất</a></li>
+          <li><a href="tonkho.html">Thống kê Tồn kho</a></li>
+        </ul>
+      </li>
+
+      <li class="nav-item" id="menu-donhang">
+          <a class="nav-link collapsed" href="dsdonhang.html">
+              <i class="bi bi-cart-check"></i><span>Quản lý Đơn hàng</span>
+          </a>
+      </li>
+
+      <li class="nav-item" id="menu-khachhang">
+          <a class="nav-link collapsed" href="dskhachhang.html">
+              <i class="bi bi-people"></i><span>Quản lý Khách hàng</span>
+          </a>
+      </li>
+      
+      <li class="nav-item" id="menu-ncc">
+          <a class="nav-link collapsed" href="dsnhacungcap.html">
+              <i class="bi bi-truck"></i><span>Quản lý Nhà cung cấp</span>
+          </a>
+      </li>
+      
+      <li class="nav-item" id="menu-account">
+          <a class="nav-link active" href="dsnguoidung.html">
+              <i class="bi bi-person-gear"></i><span id="label-account">Quản lý Tài khoản</span>
+          </a>
+      </li>
+
+      <li class="nav-item" id="menu-role">
+          <a class="nav-link collapsed" href="dsvaitro.html">
+              <i class="bi bi-shield-lock"></i><span>Quản lý Vai trò</span>
+          </a>
+      </li>
+
+    </ul>
+  </aside>
+
+  <main id="main" class="main">
+    <div class="pagetitle">
+      <h1 id="page-title">Danh sách Tài khoản</h1>
+      <nav>
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="index.html">Trang chủ</a></li>
+          <li class="breadcrumb-item active">Tài khoản</li>
+        </ol>
+      </nav>
+    </div>
+
+    <section class="section">
+      <div class="row">
+        <div class="col-lg-12">
+
+          <div class="card mb-3">
+            <div class="card-body p-3">
+              <div class="row align-items-center g-2">
+                
+                <div class="col-md-3">
+                  <select class="form-select" id="filterVaiTro">
+                      <option value="">--- Chọn Vai trò ---</option>
+                  </select>
+                </div>
+
+                <div class="col-md-3">
+                  <select class="form-select" id="filterGioiTinh">
+                      <option value="">--- Chọn Giới tính ---</option>
+                      <option value="Nam">Nam</option>
+                      <option value="Nữ">Nữ</option>
+                  </select>
+                </div>
+
+                <div class="col-md-6 text-end">
+                   <div class="d-flex gap-2 justify-content-end">
+                      <button class="btn btn-primary" onclick="filterAccounts()"><i class="bi bi-funnel"></i> Lọc</button>
+                      <button class="btn btn-outline-secondary" onclick="resetFilter()" title="Tải lại danh sách">
+                        <i class="bi bi-arrow-counterclockwise"></i>
+                      </button>
+                      <button class="btn btn-success" onclick="openAddModal()">
+                          <i class="bi bi-person-plus-fill me-1"></i> Thêm mới
+                      </button>
+                   </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title" id="card-title">Danh sách người dùng</h5>
+              
+              <div class="table-responsive">
+                  <table class="table table-hover table-bordered">
+                    <thead class="table-light">
+                      <tr>
+                        <th class="text-center" style="width: 60px;">Ảnh</th>
+                        <th>Mã TK</th>
+                        <th>Tên đăng nhập</th>
+                        <th>Họ và Tên</th>
+                        <th>Liên hệ</th>
+                        <th>Giới tính</th>
+                        <th>Vai trò</th>
+                        <th>Trạng thái</th>
+                        <th class="text-center action-col">Tác vụ</th>
+                      </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                      </tbody>
+                  </table>
+              </div>
+              
+              <div class="d-flex justify-content-between align-items-center mt-4">
+                  <div class="pagination-info" id="recordCount"></div>
+                  <nav aria-label="Page navigation">
+                    <ul class="pagination justify-content-end mb-0" id="paginationControls"></ul>
+                  </nav>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div class="modal fade" id="accountModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalTitle">Thêm Tài khoản mới</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="accountForm">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Mã Tài khoản <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="maTaiKhoan" placeholder="Tự động gợi ý..." required>
+                    <div class="form-text text-muted">Định dạng TKxxx (VD: TK001)</div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Tên đăng nhập <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="tenDangNhap" required>
+                </div>
+
+                <div class="col-md-6" id="oldPasswordGroup">
+                    <label class="form-label">Mật khẩu cũ</label>
+                    <input type="password" class="form-control" id="matKhauCu" placeholder="Không bắt buộc với Admin">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" id="newPasswordLabel">Mật khẩu <span class="text-danger">*</span></label> 
+                    <input type="password" class="form-control" id="matKhauMoi" placeholder="Tối thiểu 6 ký tự">
+                </div>
+                <div class="col-md-6" id="confirmPasswordGroup">
+                    <label class="form-label">Xác nhận mật khẩu <span class="text-danger">*</span></label>
+                    <input type="password" class="form-control" id="xacNhanMatKhau" placeholder="Nhập lại mật khẩu">
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Họ và Tên <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="hoVaTen">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Giới tính</label>
+                    <select class="form-select" id="gioiTinh">
+                        <option value="Nam">Nam</option>
+                        <option value="Nữ">Nữ</option>
+                        <option value="Khác">Khác</option>
+                    </select>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Email <span class="text-danger">*</span></label>
+                    <input type="email" class="form-control" id="email" placeholder="abc@gmail.com">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Số điện thoại <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="sdt" placeholder="10 chữ số">
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Vai trò <span class="text-danger">*</span></label>
+                    <select class="form-select" id="maVaiTroModal"></select>
+                    <small class="text-muted" id="roleNote" style="display: none;">(Boss không thể đổi vai trò)</small>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Trạng thái</label>
+                    <select class="form-select" id="trangThai">
+                        <option value="Hoạt động">Hoạt động</option>
+                        <option value="Tạm khóa">Tạm khóa</option>
+                    </select>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Hình ảnh <span class="text-danger">*</span></label>
+                    <input type="file" class="form-control" id="hinhAnhInput" accept="image/*" onchange="uploadAnh(this)">
+                    <input type="hidden" id="hinhAnhDB"> 
+                    <div id="previewContainer">
+                        <img id="previewImg" src="" alt="Avatar">
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label">Ngày tạo</label>
+                    <input type="text" class="form-control bg-light" id="ngayTao" readonly>
+                </div>
+                <div class="col-md-3" id="divNgaySua">
+                    <label class="form-label">Ngày sửa</label>
+                    <input type="text" class="form-control bg-light" id="ngaySua" readonly>
+                </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+          <button type="button" class="btn btn-primary" onclick="saveAccount()">Lưu lại</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="deleteModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h5 class="modal-title text-danger">Xác nhận xóa</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body">Bạn có chắc chắn muốn xóa tài khoản <strong id="deleteAccountId"></strong> này không?<br>Hành động này không thể hoàn tác.</div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button><button type="button" class="btn btn-danger" onclick="confirmDelete()">Xóa ngay</button></div></div></div></div>
+  <div class="modal fade" id="userProfileModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Hồ sơ của bạn</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body text-center"><img src="" id="profileAvatar" class="rounded-circle mb-3" style="width: 100px; height: 100px; object-fit: cover; border: 3px solid #0d6efd;"><h4 id="profileName" class="fw-bold"></h4><p id="profileRole" class="text-muted mb-3"></p><div class="text-start px-3"><p><strong>Mã TK:</strong> <span id="profileId"></span></p><p><strong>Email:</strong> <span id="profileEmail"></span></p><p><strong>SĐT:</strong> <span id="profilePhone"></span></p></div></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button></div></div></div></div>
+  <div class="modal fade" id="settingsModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Cài đặt hiển thị</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="d-flex justify-content-between align-items-center mb-4"><div><h6 class="mb-0 fw-bold">Chế độ tối</h6></div><div class="form-check form-switch"><input class="form-check-input" type="checkbox" id="darkModeSwitch" onchange="toggleDarkMode()"></div></div><hr><div class="mb-3"><h6 class="mb-2 fw-bold">Kích thước chữ</h6><input type="range" class="form-range" min="12" max="20" step="1" id="fontSizeRange" oninput="changeFontSize(this.value)"><div class="d-flex justify-content-between small"><span>Nhỏ</span><span id="fontSizeValue">14px</span><span>Lớn</span></div></div></div><div class="modal-footer"><button type="button" class="btn btn-primary" data-bs-dismiss="modal">Xong</button></div></div></div></div>
+
+  <footer id="footer" class="footer"><div class="copyright">&copy; SmartZone</div></footer>
+  <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+
+  <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="assets/js/main.js"></script>
+
+  <script>
+    const BASE_URL = "http://localhost:8080/api";
+    const PHOTO_URL = "http://localhost:8080/photos/taikhoan/";
+    let originalAccounts = []; 
+    let currentFilteredList = []; // Dữ liệu đã lọc
+    let allRoles = []; // Lưu tất cả vai trò
+    
+    // Phân trang
+    let currentPage = 1;
+    const itemsPerPage = 10;
+
+    const currentUserStr = localStorage.getItem("currentUser");
+    if (!currentUserStr) window.location.href = "login.html";
+    const currentUser = JSON.parse(currentUserStr);
+
+    var accountModal = new bootstrap.Modal(document.getElementById('accountModal'));
+    var deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    var userProfileModal = new bootstrap.Modal(document.getElementById('userProfileModal'));
+    var settingsModal = new bootstrap.Modal(document.getElementById('settingsModal'));
+
+    var currentDeleteId = null;
+    var isEditMode = false;
+
+    document.addEventListener("DOMContentLoaded", function() {
+        setupHeader();
+        applyRolePermissions();
+        loadRoles().then(() => loadAccounts()); // Load Roles xong mới load Accounts
+        applySavedSettings();
+    });
+
+    // --- HÀM PHÂN QUYỀN ---
+    function applyRolePermissions() {
+        const roleName = currentUser.vaiTro ? currentUser.vaiTro.tenVaiTro : "";
+        
+        const menuThongKe = document.getElementById("menu-thongke");
+        const menuHangHoa = document.getElementById("menu-hanghoa");
+        const menuKho = document.getElementById("menu-kho");
+        const menuDonHang = document.getElementById("menu-donhang");
+        const menuKhachHang = document.getElementById("menu-khachhang");
+        const menuNCC = document.getElementById("menu-ncc");
+        const menuAccount = document.getElementById("menu-account");
+        const menuRole = document.getElementById("menu-role");
+        const labelAccount = document.getElementById("label-account");
+        
+        const pageTitle = document.getElementById("page-title");
+        const cardTitle = document.getElementById("card-title");
+
+        // 1. STAFF
+        if (roleName === "Staff" || roleName === "Nhân viên" || roleName === "Kho") {
+            if(menuThongKe) menuThongKe.style.display = "none";
+            if(menuNCC) menuNCC.style.display = "none";
+            if(menuAccount) menuAccount.style.display = "none";
+            if(menuRole) menuRole.style.display = "none";
+        }
+        // 2. LEADER
+        else if (roleName === "Leader" || roleName === "Trưởng nhóm" || roleName === "Quản lý") {
+            if(menuThongKe) menuThongKe.style.display = "none";
+            if(menuAccount) menuAccount.style.display = "none";
+            if(menuRole) menuRole.style.display = "none";
+        }
+        // 3. BOSS -> Quản lý Nhân sự
+        else if (roleName === "Boss" || roleName === "Giám đốc") {
+            if (menuAccount) {
+                if(labelAccount) labelAccount.innerText = "Quản lý Nhân sự";
+                const icon = menuAccount.querySelector("a i");
+                if(icon) { icon.classList.remove("bi-person-gear"); icon.classList.add("bi-people-fill"); }
+            }
+            if(menuRole) menuRole.style.display = "none";
+
+            if(pageTitle) pageTitle.innerText = "Quản lý Nhân sự";
+            if(cardTitle) cardTitle.innerText = "Danh sách nhân viên (Staff & Leader)";
+        }
+        // 4. ADMIN -> Quản lý Tài khoản
+        else if (roleName === "Admin" || roleName === "Quản trị viên") {
+            if(menuThongKe) menuThongKe.style.display = "none";
+            if(menuHangHoa) menuHangHoa.style.display = "none";
+            if(menuKho) menuKho.style.display = "none";
+            if(menuDonHang) menuDonHang.style.display = "none";
+            if(menuKhachHang) menuKhachHang.style.display = "none";
+            if(menuNCC) menuNCC.style.display = "none";
+            
+            if(menuAccount) menuAccount.style.display = "block";
+            if(menuRole) menuRole.style.display = "block";
+            
+            if(pageTitle) pageTitle.innerText = "Quản lý Tài khoản";
+            if(cardTitle) cardTitle.innerText = "Danh sách toàn bộ tài khoản hệ thống";
+        }
+    }
+
+    function setupHeader() {
+        const avatarUrl = currentUser.hinhAnh ? (PHOTO_URL + currentUser.hinhAnh) : "assets/img/profile-img.jpg";
+        document.getElementById("headerName").innerText = currentUser.tenDangNhap;
+        document.getElementById("headerAvatar").src = avatarUrl;
+        document.getElementById("headerFullName").innerText = currentUser.hoVaTen || currentUser.tenDangNhap;
+        document.getElementById("headerRole").innerText = currentUser.vaiTro ? currentUser.vaiTro.tenVaiTro : "Nhân viên";
+        document.getElementById("profileAvatar").src = avatarUrl;
+    }
+
+    // --- LOAD DỮ LIỆU ---
+    async function loadRoles() {
+        await fetch(`${BASE_URL}/vaitro`).then(r => r.json()).then(data => {
+            allRoles = data;
+            let filterSelect = document.getElementById("filterVaiTro");
+            filterSelect.innerHTML = '<option value="">--- Chọn Vai trò ---</option>';
+            data.forEach(role => {
+                filterSelect.innerHTML += `<option value="${role.maVaiTro}">${role.tenVaiTro}</option>`;
+            });
+        }).catch(err => console.error(err));
+    }
+
+    // [MỚI] Render Role Options cho Modal dựa trên User hiện tại
+    function renderRoleOptionsForModal() {
+        const modalSelect = document.getElementById("maVaiTroModal");
+        modalSelect.innerHTML = '';
+        const roleName = currentUser.vaiTro ? currentUser.vaiTro.tenVaiTro : "";
+
+        allRoles.forEach(role => {
+            // Nếu là Boss: Chỉ hiện Staff và Leader
+            if (roleName === "Boss" || roleName === "Giám đốc") {
+                if (role.tenVaiTro === "Staff" || role.tenVaiTro === "Nhân viên" || role.tenVaiTro === "Kho" ||
+                    role.tenVaiTro === "Leader" || role.tenVaiTro === "Trưởng nhóm" || role.tenVaiTro === "Quản lý") {
+                    modalSelect.innerHTML += `<option value="${role.maVaiTro}">${role.tenVaiTro}</option>`;
+                }
+            } else {
+                // Admin: Hiện tất cả
+                modalSelect.innerHTML += `<option value="${role.maVaiTro}">${role.tenVaiTro}</option>`;
+            }
+        });
+    }
+
+    function loadAccounts() {
+        fetch(`${BASE_URL}/taikhoan`)
+            .then(res => res.json())
+            .then(data => {
+                const roleName = currentUser.vaiTro ? currentUser.vaiTro.tenVaiTro : "";
+
+                // LOGIC LỌC DỮ LIỆU CHO BOSS
+                if (roleName === "Boss" || roleName === "Giám đốc") {
+                    // Boss chỉ thấy Staff và Leader
+                    originalAccounts = data.filter(acc => {
+                        const rName = acc.vaiTro ? acc.vaiTro.tenVaiTro : "";
+                        return rName === "Staff" || rName === "Nhân viên" || rName === "Kho" || 
+                               rName === "Leader" || rName === "Trưởng nhóm" || rName === "Quản lý";
+                    });
+                } else {
+                    // Admin thấy hết
+                    originalAccounts = data;
+                }
+
+                currentFilteredList = originalAccounts;
+                displayCurrentPage();
+            })
+            .catch(err => console.error("Lỗi load tài khoản:", err));
+    }
+
+    // --- LOGIC PHÂN TRANG ---
+    function displayCurrentPage() {
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+        const paginatedItems = currentFilteredList.slice(startIndex, endIndex);
+
+        renderTable(paginatedItems);
+        renderPaginationControls();
+        
+        document.getElementById("recordCount").innerText = `Hiển thị ${paginatedItems.length} / ${currentFilteredList.length} tài khoản`;
+    }
+
+    function renderPaginationControls() {
+        const paginationContainer = document.getElementById("paginationControls");
+        paginationContainer.innerHTML = "";
+
+        const totalPages = Math.ceil(currentFilteredList.length / itemsPerPage);
+        if (totalPages <= 1) return;
+
+        // Nút Trước
+        let prevClass = currentPage === 1 ? "disabled" : "";
+        let prevHtml = `<li class="page-item ${prevClass}"><a class="page-link" onclick="changePage(${currentPage - 1})">&laquo;</a></li>`;
+        paginationContainer.insertAdjacentHTML('beforeend', prevHtml);
+
+        // Các số trang
+        for (let i = 1; i <= totalPages; i++) {
+            let activeClass = i === currentPage ? "active" : "";
+            let pageHtml = `<li class="page-item ${activeClass}"><a class="page-link" onclick="changePage(${i})">${i}</a></li>`;
+            paginationContainer.insertAdjacentHTML('beforeend', pageHtml);
+        }
+
+        // Nút Sau
+        let nextClass = currentPage === totalPages ? "disabled" : "";
+        let nextHtml = `<li class="page-item ${nextClass}"><a class="page-link" onclick="changePage(${currentPage + 1})">&raquo;</a></li>`;
+        paginationContainer.insertAdjacentHTML('beforeend', nextHtml);
+    }
+
+    function changePage(page) {
+        const totalPages = Math.ceil(currentFilteredList.length / itemsPerPage);
+        if (page < 1 || page > totalPages) return;
+        currentPage = page;
+        displayCurrentPage();
+    }
+
+    // --- RENDER TABLE ---
+    function renderTable(dataList) {
+        let tbody = document.getElementById("tableBody");
+        let html = "";
+
+        if (dataList.length === 0) {
+            html = '<tr><td colspan="9" class="text-center text-muted">Không tìm thấy dữ liệu</td></tr>';
+        } else {
+            dataList.forEach(acc => {
+                let imgUrl = acc.hinhAnh ? (PHOTO_URL + acc.hinhAnh) : "assets/img/profile-img.jpg";
+                let tenVaiTro = acc.vaiTro ? acc.vaiTro.tenVaiTro : "N/A";
+                let statusBadge = acc.trangThai === 'Hoạt động' 
+                                ? '<span class="badge bg-success">Hoạt động</span>' 
+                                : '<span class="badge bg-danger">Tạm khóa</span>';
+                
+                let accString = JSON.stringify(acc).replace(/'/g, "&#39;").replace(/"/g, "&quot;");
+
+                html += `
+                    <tr>
+                        <td class="text-center"><img src="${imgUrl}" class="avatar-img"></td>
+                        <td>${acc.maTaiKhoan}</td>
+                        <td class="fw-bold text-primary">${acc.tenDangNhap}</td>
+                        <td>${acc.hoVaTen || ''}</td>
+                        <td>
+                            <small class="d-block">${acc.email || ''}</small>
+                            <small class="text-muted">${acc.sdt || ''}</small>
+                        </td>
+                        <td>${acc.gioiTinh}</td>
+                        <td><span class="badge bg-info text-dark">${tenVaiTro}</span></td>
+                        <td>${statusBadge}</td>
+                        <td class="text-center action-col">
+                            <button class="btn btn-sm btn-warning" onclick='openEditModal(${accString})'><i class="bi bi-pencil"></i></button>
+                            <button class="btn btn-sm btn-danger ms-1" onclick="openDeleteModal('${acc.maTaiKhoan}')"><i class="bi bi-trash"></i></button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+        tbody.innerHTML = html;
+    }
+
+    // --- TÌM KIẾM & LỌC ---
+    function filterAccounts() {
+        let keyword = document.getElementById("searchInput").value.toLowerCase().trim();
+        let role = document.getElementById("filterVaiTro").value;
+        let gender = document.getElementById("filterGioiTinh").value;
+
+        toggleClearBtn();
+
+        currentFilteredList = originalAccounts.filter(acc => {
+            const matchKeyword = acc.maTaiKhoan.toLowerCase().includes(keyword) || 
+                                 acc.tenDangNhap.toLowerCase().includes(keyword) || 
+                                 (acc.hoVaTen && acc.hoVaTen.toLowerCase().includes(keyword));
+            
+            const matchRole = role ? (acc.vaiTro && acc.vaiTro.maVaiTro === role) : true;
+            const matchGender = gender ? acc.gioiTinh === gender : true;
+
+            return matchKeyword && matchRole && matchGender;
+        });
+
+        currentPage = 1; // Reset trang
+        displayCurrentPage();
+    }
+
+    function resetFilter() {
+        document.getElementById("filterVaiTro").value = "";
+        document.getElementById("filterGioiTinh").value = "";
+        document.getElementById("searchInput").value = "";
+        toggleClearBtn();
+        
+        currentFilteredList = originalAccounts;
+        currentPage = 1;
+        displayCurrentPage();
+    }
+
+    function toggleClearBtn() {
+        let val = document.getElementById("searchInput").value;
+        let btn = document.getElementById("btnClearSearch");
+        if (val.trim().length > 0) btn.classList.remove("d-none");
+        else btn.classList.add("d-none");
+    }
+
+    function searchAccounts() { filterAccounts(); }
+    function clearSearch() {
+        document.getElementById("searchInput").value = "";
+        document.getElementById("searchInput").focus();
+        toggleClearBtn();
+        filterAccounts();
+    }
+
+    // --- CRUD ---
+    function validateForm() {
+        let ma = document.getElementById('maTaiKhoan').value.trim();
+        let tenDN = document.getElementById('tenDangNhap').value.trim();
+        let pass = document.getElementById('matKhauMoi').value.trim();
+        let confirmPass = document.getElementById('xacNhanMatKhau').value.trim();
+        let hoTen = document.getElementById('hoVaTen').value.trim();
+        let email = document.getElementById('email').value.trim();
+        let sdt = document.getElementById('sdt').value.trim();
+        let vaiTro = document.getElementById('maVaiTroModal').value;
+        let trangThai = document.getElementById('trangThai').value;
+        let hinhAnh = document.getElementById('hinhAnhDB').value.trim();
+
+        if (!ma || !tenDN || !hoTen || !email || !sdt || !vaiTro || !trangThai || !hinhAnh) {
+            alert("Vui lòng điền đầy đủ thông tin và chọn ảnh đại diện!"); return false; 
+        }
+        if (!/^TK\d{3}$/.test(ma)) { alert("Mã tài khoản sai định dạng! (VD: TK002)"); return false; }
+        if ((!isEditMode && !pass) || (pass && pass.length < 6)) { alert("Mật khẩu phải có ít nhất 6 ký tự!"); return false; }
+        if (pass && pass !== confirmPass) { alert("Mật khẩu xác nhận không khớp!"); return false; }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { alert("Email không đúng định dạng!"); return false; }
+        if (!/^\d{10}$/.test(sdt)) { alert("Số điện thoại phải bao gồm đúng 10 chữ số!"); return false; }
+        return true;
+    }
+
+    function uploadAnh(input) {
+        if (input.files && input.files[0]) {
+            var formData = new FormData();
+            formData.append("file", input.files[0]);
+            fetch(`${BASE_URL}/upload?folder=taikhoan`, { method: 'POST', body: formData }).then(res => res.json()).then(data => {
+                document.getElementById('previewImg').src = data.url;
+                document.getElementById('previewContainer').style.display = 'block';
+                document.getElementById('hinhAnhDB').value = data.fileName;
+            }).catch(err => alert("Lỗi upload: " + err));
+        }
+    }
+
+    function openAddModal() {
+        document.getElementById('modalTitle').innerText = "Thêm Tài khoản mới";
+        document.getElementById('accountForm').reset();
+        document.getElementById('maTaiKhoan').disabled = false;
+        document.getElementById('previewContainer').style.display = 'none';
+        document.getElementById('hinhAnhDB').value = "";
+        document.getElementById('oldPasswordGroup').style.display = 'none'; 
+        document.getElementById('confirmPasswordGroup').style.display = 'block'; 
+        document.getElementById('newPasswordLabel').innerText = 'Mật khẩu'; 
+        document.getElementById('matKhauMoi').required = true; 
+        document.getElementById('ngayTao').value = new Date().toISOString().slice(0, 10);
+        document.getElementById('divNgaySua').style.display = 'none';
+
+        // [MỚI] Render Options Vai trò theo quyền
+        renderRoleOptionsForModal();
+        // Nếu là Boss -> Enable select (để chọn Staff/Leader)
+        // Nếu là Admin -> Enable select
+        document.getElementById('maVaiTroModal').disabled = false;
+        document.getElementById('roleNote').style.display = 'none';
+
+        fetch(`${BASE_URL}/taikhoan/next-id`).then(res => res.text()).then(nextId => document.getElementById('maTaiKhoan').value = nextId);
+        isEditMode = false;
+        accountModal.show();
+    }
+
+    function openEditModal(acc) {
+        document.getElementById('modalTitle').innerText = "Cập nhật Tài khoản";
+        document.getElementById('maTaiKhoan').value = acc.maTaiKhoan;
+        document.getElementById('maTaiKhoan').disabled = true;
+        document.getElementById('tenDangNhap').value = acc.tenDangNhap;
+        document.getElementById('hoVaTen').value = acc.hoVaTen || "";
+        document.getElementById('gioiTinh').value = acc.gioiTinh;
+        document.getElementById('email').value = acc.email || "";
+        document.getElementById('sdt').value = acc.sdt || "";
+        document.getElementById('trangThai').value = acc.trangThai;
+        
+        // [MỚI] Render Options Vai trò
+        renderRoleOptionsForModal();
+        if(acc.vaiTro) document.getElementById('maVaiTroModal').value = acc.vaiTro.maVaiTro;
+
+        // [MỚI] Logic Disable Vai trò khi sửa (Cho Boss)
+        const roleName = currentUser.vaiTro ? currentUser.vaiTro.tenVaiTro : "";
+        if (roleName === "Boss" || roleName === "Giám đốc") {
+            document.getElementById('maVaiTroModal').disabled = true;
+            document.getElementById('roleNote').style.display = 'block';
+        } else {
+            document.getElementById('maVaiTroModal').disabled = false;
+            document.getElementById('roleNote').style.display = 'none';
+        }
+
+        if(acc.hinhAnh) {
+            document.getElementById('previewImg').src = PHOTO_URL + acc.hinhAnh;
+            document.getElementById('previewContainer').style.display = 'block';
+            document.getElementById('hinhAnhDB').value = acc.hinhAnh;
+        } else {
+            document.getElementById('previewContainer').style.display = 'none';
+            document.getElementById('hinhAnhDB').value = "";
+        }
+        document.getElementById('ngayTao').value = acc.ngayTao ? acc.ngayTao.slice(0,10) : "";
+        document.getElementById('divNgaySua').style.display = 'block';
+        document.getElementById('ngaySua').value = new Date().toISOString().slice(0, 10);
+        
+        document.getElementById('oldPasswordGroup').style.display = 'block'; 
+        document.getElementById('confirmPasswordGroup').style.display = 'block'; 
+        document.getElementById('newPasswordLabel').innerText = 'Mật khẩu mới'; 
+        document.getElementById('matKhauMoi').value = ""; 
+        document.getElementById('xacNhanMatKhau').value = ""; 
+
+        isEditMode = true;
+        accountModal.show();
+    }
+
+    function saveAccount() {
+        if (!validateForm()) return; 
+        var ma = document.getElementById('maTaiKhoan').value.trim();
+        var accData = {
+            maTaiKhoan: ma,
+            tenDangNhap: document.getElementById('tenDangNhap').value.trim(),
+            matKhau: document.getElementById('matKhauMoi').value.trim(),
+            hoVaTen: document.getElementById('hoVaTen').value.trim(),
+            email: document.getElementById('email').value.trim(),
+            sdt: document.getElementById('sdt').value.trim(),
+            gioiTinh: document.getElementById('gioiTinh').value,
+            trangThai: document.getElementById('trangThai').value,
+            hinhAnh: document.getElementById('hinhAnhDB').value,
+            vaiTro: { maVaiTro: document.getElementById('maVaiTroModal').value }
+        };
+        var method = isEditMode ? 'PUT' : 'POST';
+        var url = isEditMode ? `${BASE_URL}/taikhoan/${ma}` : `${BASE_URL}/taikhoan`;
+
+        fetch(url, { method: method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(accData) })
+        .then(async res => { if (!res.ok) throw new Error(await res.text()); return res.json(); })
+        .then(() => {
+            alert(isEditMode ? "Cập nhật thành công!" : "Thêm mới thành công!");
+            accountModal.hide();
+            loadAccounts(); // Reload lại danh sách -> Đồng bộ trạng thái ngay lập tức
+        }).catch(err => alert("Lỗi: " + err.message));
+    }
+
+    function openDeleteModal(id) {
+        document.getElementById('deleteAccountId').innerText = id;
+        currentDeleteId = id;
+        deleteModal.show();
+    }
+    function confirmDelete() {
+        if (!currentDeleteId) return;
+        fetch(`${BASE_URL}/taikhoan/${currentDeleteId}`, { method: 'DELETE' }).then(async res => {
+            if (res.ok) {
+                alert("Đã xóa thành công!");
+                deleteModal.hide();
+                loadAccounts();
+            } else {
+                alert("Không thể xóa tài khoản này!");
+            }
+        }).catch(err => console.error(err));
+    }
+
+    // --- UTILS ---
+    function showUserProfile() {
+        document.getElementById('profileId').innerText = currentUser.maTaiKhoan;
+        document.getElementById('profileName').innerText = currentUser.hoVaTen || currentUser.tenDangNhap;
+        document.getElementById('profileEmail').innerText = currentUser.email || "Chưa cập nhật";
+        document.getElementById('profilePhone').innerText = currentUser.sdt || "Chưa cập nhật";
+        document.getElementById('profileAvatar').src = currentUser.hinhAnh ? (PHOTO_URL + currentUser.hinhAnh) : "assets/img/profile-img.jpg";
+        userProfileModal.show();
+    }
+    function openSettingsModal() {
+        document.getElementById("darkModeSwitch").checked = localStorage.getItem("darkMode") === "true";
+        document.getElementById("fontSizeRange").value = localStorage.getItem("fontSize") || "14";
+        settingsModal.show();
+    }
+    function toggleDarkMode() {
+        const check = document.getElementById("darkModeSwitch").checked;
+        if(check) { document.body.classList.add("dark-mode"); localStorage.setItem("darkMode", "true"); } 
+        else { document.body.classList.remove("dark-mode"); localStorage.setItem("darkMode", "false"); }
+    }
+    function changeFontSize(val) {
+        document.documentElement.style.fontSize = val + "px"; document.body.style.fontSize = val + "px"; 
+        localStorage.setItem("fontSize", val);
+    }
+    function applySavedSettings() {
+        if(localStorage.getItem("darkMode") === "true") document.body.classList.add("dark-mode");
+        const savedSize = localStorage.getItem("fontSize");
+        if(savedSize) document.body.style.fontSize = savedSize + "px";
+    }
+    function logout() {
+        if(confirm("Bạn có chắc chắn muốn đăng xuất?")) { localStorage.removeItem("currentUser"); window.location.href = "login.html"; }
+    }
+  </script>
+
+</body>
+</html>

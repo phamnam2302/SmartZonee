@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <title>Danh sách Nhà cung cấp - Smart Zone</title>
+  
+  <link href="assets/img/favicon.png" rel="icon">
+  <link href="assets/img/apple-touch-icon.png" rel="apple-touch-icon">
+  <link href="https://fonts.gstatic.com" rel="preconnect">
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Nunito:300,300i,400,400i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i" rel="stylesheet">
+  
+  <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+  <link href="assets/vendor/boxicons/css/boxicons.min.css" rel="stylesheet">
+  <link href="assets/vendor/simple-datatables/style.css" rel="stylesheet">
+  <link href="assets/css/style.css" rel="stylesheet">
+
+  <style>
+    /* CSS Tùy chỉnh */
+    .pagination-info { color: #6c757d; font-size: 0.9rem; }
+    .table th { white-space: nowrap; vertical-align: middle; font-weight: 600; }
+    .table td { vertical-align: middle; }
+    .action-col { white-space: nowrap; width: 100px; text-align: center; }
+    .supplier-logo { width: 50px; height: 50px; object-fit: contain; border-radius: 4px; border: 1px solid #dee2e6; background: #fff; padding: 2px; }
+    
+    #headerAvatar { width: 36px; height: 36px; object-fit: cover; border-radius: 50%; border: 1px solid #e0e0e0; }
+    #profileAvatar { object-fit: cover; border: 3px solid #0d6efd; }
+
+    /* Search Bar */
+    .search-bar { min-width: 360px; padding: 0 20px; }
+    .search-form { width: 100%; border: 1px solid rgba(1, 41, 112, 0.2); padding: 5px 10px; border-radius: 4px; display: flex; align-items: center; background-color: #fff; transition: 0.3s; }
+    .search-form:focus-within { border-color: #0d6efd; box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.1); }
+    .search-form input { border: none !important; outline: none !important; box-shadow: none !important; padding: 4px 8px; width: 100%; background: transparent; color: #012970; font-size: 14px; }
+    .search-form button[title="Search"] { border: 0; background: transparent; color: #012970; margin-left: 8px; }
+    #btnClearSearch { border: none; background: transparent; color: #dc3545; font-size: 18px; cursor: pointer; }
+
+    /* Pagination Styles */
+    .pagination .page-item.active .page-link { background-color: #0d6efd; border-color: #0d6efd; }
+    .pagination .page-link { color: #012970; cursor: pointer; }
+    .pagination .page-item.disabled .page-link { color: #6c757d; }
+
+    /* Dark Mode */
+    body.dark-mode { background-color: #1a1a2e; color: #e0e0e0; }
+    body.dark-mode .header { background-color: #16213e; box-shadow: 0px 2px 20px rgba(0, 0, 0, 0.4); }
+    body.dark-mode .sidebar, body.dark-mode .card, body.dark-mode .modal-content { background-color: #16213e; color: #fff; border-color: #2c3e50; }
+    body.dark-mode .form-control, body.dark-mode .form-select { background-color: #0f3460; border-color: #2c3e50; color: #fff; }
+    body.dark-mode .table { color: #e0e0e0; border-color: #2c3e50; }
+    body.dark-mode .table-light th { background-color: #0f3460; color: #fff; border-color: #2c3e50; }
+    body.dark-mode .table-hover tbody tr:hover { color: #fff; background-color: #2c3e50; }
+    body.dark-mode .search-form { background-color: #16213e; border-color: #555; }
+    body.dark-mode .search-form input { color: #fff; }
+    body.dark-mode .search-form button { color: #fff; }
+    body.dark-mode .nav-link.collapsed { color: #e0e0e0; background: transparent; }
+    body.dark-mode .logo span, body.dark-mode .pagetitle h1 { color: #fff; }
+    body.dark-mode .dropdown-menu { background-color: #16213e; border: 1px solid #444; }
+    body.dark-mode .dropdown-item { color: #e0e0e0; }
+    body.dark-mode .dropdown-item:hover { background-color: #0f3460; }
+    body.dark-mode .dropdown-header h6 { color: #fff; }
+    body.dark-mode .pagination .page-link { background-color: #16213e; border-color: #2c3e50; color: #e0e0e0; }
+    body.dark-mode .pagination .page-item.active .page-link { background-color: #0d6efd; border-color: #0d6efd; color: #fff; }
+  </style>
+</head>
+
+<body>
+
+  <header id="header" class="header fixed-top d-flex align-items-center">
+    <div class="d-flex align-items-center justify-content-between">
+      <a href="index.html" class="logo d-flex align-items-center">
+        <img src="assets/img/logo.png" alt="">
+        <span class="d-none d-lg-block">Smart Zone</span>
+      </a>
+      <i class="bi bi-list toggle-sidebar-btn"></i>
+    </div>
+
+    <div class="search-bar">
+      <form class="search-form" onsubmit="event.preventDefault(); searchSuppliers();">
+        <input type="text" id="searchInput" placeholder="Tìm Mã, Tên NCC hoặc Địa chỉ..." oninput="toggleClearBtn()">
+        <button type="button" id="btnClearSearch" class="d-none" onclick="clearSearch()"><i class="bi bi-x-lg"></i></button>
+        <button type="button" onclick="searchSuppliers()" title="Search"><i class="bi bi-search"></i></button>
+      </form>
+    </div>
+
+    <nav class="header-nav ms-auto">
+      <ul class="d-flex align-items-center">
+        <li class="nav-item d-block d-lg-none"><a class="nav-link nav-icon search-bar-toggle " href="#"><i class="bi bi-search"></i></a></li>
+        <li class="nav-item dropdown pe-3">
+          <a class="nav-link nav-profile d-flex align-items-center pe-0" href="#" data-bs-toggle="dropdown">
+            <img src="assets/img/profile-img.jpg" alt="Profile" class="rounded-circle" id="headerAvatar">
+            <span class="d-none d-md-block dropdown-toggle ps-2" id="headerName">Admin</span>
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow profile">
+             <li class="dropdown-header"><h6 id="headerFullName">Quản trị viên</h6><span id="headerRole">Quản lý kho</span></li>
+             <li><hr class="dropdown-divider"></li>
+             <li><a class="dropdown-item d-flex align-items-center" href="#" onclick="showUserProfile()"><i class="bi bi-person"></i><span>Hồ sơ của bạn</span></a></li>
+             <li><hr class="dropdown-divider"></li>
+             <li><a class="dropdown-item d-flex align-items-center" href="#" onclick="openSettingsModal()"><i class="bi bi-gear"></i><span>Cài đặt hiển thị</span></a></li>
+             <li><hr class="dropdown-divider"></li>
+             <li><a class="dropdown-item d-flex align-items-center" href="#" onclick="logout()"><i class="bi bi-box-arrow-right"></i><span>Đăng xuất</span></a></li>
+          </ul>
+        </li>
+      </ul>
+    </nav>
+  </header>
+
+  <aside id="sidebar" class="sidebar">
+    <ul class="sidebar-nav" id="sidebar-nav">
+      
+      <li class="nav-item" id="menu-thongke">
+        <a class="nav-link collapsed" href="index.html">
+            <i class="bi bi-grid"></i><span>Thống kê</span>
+        </a>
+      </li>
+
+      <li class="nav-item" id="menu-hanghoa">
+        <a class="nav-link collapsed" data-bs-target="#hanghoa-nav" data-bs-toggle="collapse" href="#">
+            <i class="bi bi-box-seam"></i><span>Quản lý Hàng hóa</span><i class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="hanghoa-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
+            <li><a href="dsdanhmuc.html"><i class="bi bi-circle"></i>Danh sách Danh mục</a></li>
+            <li><a href="dssanpham.html"><i class="bi bi-circle"></i>Danh sách Sản phẩm</a></li>
+        </ul>
+      </li>
+      
+      <li class="nav-item" id="menu-kho">
+        <a class="nav-link collapsed" data-bs-target="#kho-nav" data-bs-toggle="collapse" href="#">
+          <i class="bi bi-house-door"></i><span>Quản lý Kho hàng</span><i class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="kho-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
+          <li><a href="dsphieunhap.html">Danh sách Phiếu Nhập</a></li>
+          <li><a href="dsphieuxuat.html">Danh sách Phiếu Xuất</a></li>
+          <li><a href="tonkho.html">Thống kê Tồn kho</a></li>
+        </ul>
+      </li>
+
+      <li class="nav-item" id="menu-donhang">
+          <a class="nav-link collapsed" href="dsdonhang.html">
+              <i class="bi bi-cart-check"></i><span>Quản lý Đơn hàng</span>
+          </a>
+      </li>
+
+      <li class="nav-item" id="menu-khachhang">
+          <a class="nav-link collapsed" href="dskhachhang.html">
+              <i class="bi bi-people"></i><span>Quản lý Khách hàng</span>
+          </a>
+      </li>
+      
+      <li class="nav-item" id="menu-ncc">
+          <a class="nav-link active" href="dsnhacungcap.html">
+              <i class="bi bi-truck"></i><span>Quản lý Nhà cung cấp</span>
+          </a>
+      </li>
+      
+      <li class="nav-item" id="menu-account">
+          <a class="nav-link collapsed" href="dsnguoidung.html">
+              <i class="bi bi-person-gear"></i><span id="label-account">Quản lý Tài khoản</span>
+          </a>
+      </li>
+
+      <li class="nav-item" id="menu-role">
+          <a class="nav-link collapsed" href="dsvaitro.html">
+              <i class="bi bi-shield-lock"></i><span>Quản lý Vai trò</span>
+          </a>
+      </li>
+
+    </ul>
+  </aside>
+
+  <main id="main" class="main">
+    <div class="pagetitle">
+      <h1>Danh sách Nhà cung cấp</h1>
+      <nav>
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="index.html">Trang chủ</a></li>
+          <li class="breadcrumb-item active">Nhà cung cấp</li>
+        </ol>
+      </nav>
+    </div>
+
+    <section class="section">
+      <div class="row">
+        <div class="col-lg-12">
+          
+          <div class="card mb-3">
+            <div class="card-body p-3">
+              <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex gap-2 align-items-center" style="flex: 1;">
+                    <div style="width: 200px;">
+                        <select class="form-select" id="sortFilter" onchange="sortSuppliers()">
+                            <option value="newest">--- Mới nhất ---</option>
+                            <option value="oldest">--- Cũ nhất ---</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-primary" onclick="sortSuppliers()" title="Áp dụng lọc">
+                        <i class="bi bi-funnel"></i>
+                    </button>
+                    <button class="btn btn-outline-secondary" onclick="refreshList()" title="Tải lại">
+                        <i class="bi bi-arrow-counterclockwise"></i>
+                    </button>
+                </div>
+                <div>
+                    <button class="btn btn-success" onclick="openAddModal()">
+                        <i class="bi bi-plus-lg me-1"></i> Thêm mới
+                    </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">Đối tác cung ứng</h5>
+              
+              <div class="table-responsive">
+                  <table class="table table-hover table-bordered">
+                    <thead class="table-light">
+                      <tr>
+                        <th class="text-center">Logo</th>
+                        <th>Mã NCC</th>
+                        <th>Tên Nhà cung cấp</th>
+                        <th>Số điện thoại</th>
+                        <th>Email</th>
+                        <th>Địa chỉ</th>
+                        <th class="text-center action-col">Tác vụ</th>
+                      </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                      </tbody>
+                  </table>
+              </div>
+              
+              <div class="d-flex justify-content-between align-items-center mt-4">
+                  <div class="pagination-info" id="recordCount"></div>
+                  <nav aria-label="Page navigation">
+                    <ul class="pagination justify-content-end mb-0" id="paginationControls"></ul>
+                  </nav>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div class="modal fade" id="supplierModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalTitle">Thêm Nhà cung cấp</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="supplierForm">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Mã NCC <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control bg-light" id="maNCC" placeholder="Đang tạo mã..." readonly>
+                </div>
+                <div class="col-md-8">
+                    <label class="form-label">Tên Nhà cung cấp <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="tenNCC" required>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Số điện thoại <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="sdt" placeholder="10 chữ số">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Email <span class="text-danger">*</span></label>
+                    <input type="email" class="form-control" id="email" placeholder="abc@example.com">
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Địa chỉ</label>
+                    <textarea class="form-control" id="diaChi" rows="2"></textarea>
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Logo / Hình ảnh</label>
+                    <input type="file" class="form-control" id="hinhAnhInput" accept="image/*" onchange="uploadAnh(this)">
+                    <input type="hidden" id="hinhAnhDB">
+                    <div id="previewContainer" class="text-center mt-2" style="display:none;">
+                        <img id="previewImg" src="" alt="Xem trước logo" style="max-height:100px; border:1px solid #ddd; padding:2px; border-radius:4px;">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Ngày tạo</label>
+                    <input type="text" class="form-control bg-light" id="ngayTao" readonly>
+                </div>
+                <div class="col-md-6" id="divNgaySua">
+                    <label class="form-label">Ngày sửa</label>
+                    <input type="text" class="form-control bg-light" id="ngaySua" readonly>
+                </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+          <button type="button" class="btn btn-primary" onclick="saveSupplier()">Lưu thông tin</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title text-danger">Xác nhận xóa</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          Bạn có chắc chắn muốn xóa nhà cung cấp <strong id="deleteSupplierId"></strong> không?<br>Hành động này không thể hoàn tác.
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+          <button type="button" class="btn btn-danger" onclick="confirmDelete()">Xóa ngay</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="userProfileModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Hồ sơ của bạn</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body text-center"><img src="" id="profileAvatar" class="rounded-circle mb-3" style="width: 100px; height: 100px; object-fit: cover; border: 3px solid #0d6efd;"><h4 id="profileName" class="fw-bold"></h4><p id="profileRole" class="text-muted mb-3"></p><div class="text-start px-3"><p><strong>Mã TK:</strong> <span id="profileId"></span></p><p><strong>Email:</strong> <span id="profileEmail"></span></p><p><strong>SĐT:</strong> <span id="profilePhone"></span></p></div></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button></div></div></div></div>
+  <div class="modal fade" id="settingsModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Cài đặt hiển thị</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="d-flex justify-content-between align-items-center mb-4"><div><h6 class="mb-0 fw-bold">Chế độ tối</h6></div><div class="form-check form-switch"><input class="form-check-input" type="checkbox" id="darkModeSwitch" onchange="toggleDarkMode()"></div></div><hr><div class="mb-3"><h6 class="mb-2 fw-bold">Kích thước chữ</h6><input type="range" class="form-range" min="12" max="20" step="1" id="fontSizeRange" oninput="changeFontSize(this.value)"><div class="d-flex justify-content-between small"><span>Nhỏ</span><span id="fontSizeValue">14px</span><span>Lớn</span></div></div></div><div class="modal-footer"><button type="button" class="btn btn-primary" data-bs-dismiss="modal">Xong</button></div></div></div></div>
+
+  <footer id="footer" class="footer"><div class="copyright">&copy; SmartZone</div></footer>
+  <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+
+  <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="assets/js/main.js"></script>
+
+  <script>
+    const BASE_URL = "http://localhost:8080/api";
+    const PHOTO_URL = "http://localhost:8080/photos/nhacungcap/";
+    const AVATAR_URL = "http://localhost:8080/photos/taikhoan/";
+
+    let originalData = []; 
+    let currentFilteredList = []; // Dữ liệu sau lọc
+    
+    // Phân trang
+    let currentPage = 1;
+    const itemsPerPage = 10;
+
+    const currentUserStr = localStorage.getItem("currentUser");
+    if (!currentUserStr) window.location.href = "login.html";
+    const currentUser = JSON.parse(currentUserStr);
+    
+    var supplierModal = new bootstrap.Modal(document.getElementById('supplierModal'));
+    var deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    var userProfileModal = new bootstrap.Modal(document.getElementById('userProfileModal'));
+    var settingsModal = new bootstrap.Modal(document.getElementById('settingsModal'));
+    
+    var isEditMode = false;
+    var currentDeleteId = null;
+
+    document.addEventListener("DOMContentLoaded", function() {
+        setupHeader();
+        applyRolePermissions();
+        loadSuppliers();
+        applySavedSettings();
+    });
+
+    // --- HÀM PHÂN QUYỀN ---
+    function applyRolePermissions() {
+        const roleName = currentUser.vaiTro ? currentUser.vaiTro.tenVaiTro : "";
+        
+        const menuThongKe = document.getElementById("menu-thongke");
+        const menuHangHoa = document.getElementById("menu-hanghoa");
+        const menuKho = document.getElementById("menu-kho");
+        const menuDonHang = document.getElementById("menu-donhang");
+        const menuKhachHang = document.getElementById("menu-khachhang");
+        const menuNCC = document.getElementById("menu-ncc");
+        const menuAccount = document.getElementById("menu-account");
+        const menuRole = document.getElementById("menu-role");
+        const labelAccount = document.getElementById("label-account");
+
+        // 1. STAFF: Ẩn Thống kê, NCC, Tài khoản, Vai trò
+        // *Lưu ý*: Nếu bạn muốn Staff xem NCC thì bỏ dòng ẩn menuNCC
+        if (roleName === "Staff" || roleName === "Nhân viên" || roleName === "Kho") {
+            if(menuThongKe) menuThongKe.style.display = "none";
+            if(menuNCC) menuNCC.style.display = "none"; 
+            if(menuAccount) menuAccount.style.display = "none";
+            if(menuRole) menuRole.style.display = "none";
+        }
+        
+        // 2. LEADER: Ẩn Thống kê, Tài khoản, Vai trò (Hiện NCC)
+        else if (roleName === "Leader" || roleName === "Trưởng nhóm" || roleName === "Quản lý") {
+            if(menuThongKe) menuThongKe.style.display = "none";
+            if(menuAccount) menuAccount.style.display = "none";
+            if(menuRole) menuRole.style.display = "none";
+        }
+
+        // 3. BOSS: Đổi tên Tài khoản -> Nhân sự, Ẩn Vai trò
+        else if (roleName === "Boss" || roleName === "Giám đốc") {
+            if (menuAccount) {
+                if(labelAccount) labelAccount.innerText = "Quản lý Nhân sự";
+                const icon = menuAccount.querySelector("a i");
+                if(icon) { icon.classList.remove("bi-person-gear"); icon.classList.add("bi-people-fill"); }
+            }
+            if(menuRole) menuRole.style.display = "none";
+        }
+
+        // 4. ADMIN: CHỈ hiện Tài khoản & Vai trò
+        else if (roleName === "Admin" || roleName === "Quản trị viên") {
+            if(menuThongKe) menuThongKe.style.display = "none";
+            if(menuHangHoa) menuHangHoa.style.display = "none";
+            if(menuKho) menuKho.style.display = "none";
+            if(menuDonHang) menuDonHang.style.display = "none";
+            if(menuKhachHang) menuKhachHang.style.display = "none";
+            if(menuNCC) menuNCC.style.display = "none";
+            
+            if(menuAccount) menuAccount.style.display = "block";
+            if(menuRole) menuRole.style.display = "block";
+        }
+    }
+
+    function setupHeader() {
+        const avatarUrl = currentUser.hinhAnh ? (AVATAR_URL + currentUser.hinhAnh) : "assets/img/profile-img.jpg";
+        document.getElementById("headerName").innerText = currentUser.tenDangNhap;
+        document.getElementById("headerAvatar").src = avatarUrl;
+        document.getElementById("headerFullName").innerText = currentUser.hoVaTen || currentUser.tenDangNhap;
+        document.getElementById("headerRole").innerText = currentUser.vaiTro ? currentUser.vaiTro.tenVaiTro : "Nhân viên";
+        document.getElementById("profileAvatar").src = avatarUrl;
+    }
+
+    // --- LOAD DATA ---
+    function loadSuppliers() {
+        fetch(`${BASE_URL}/nhacungcap`)
+            .then(res => res.json())
+            .then(data => {
+                originalData = data.sort((a, b) => new Date(b.ngayTao) - new Date(a.ngayTao));
+                currentFilteredList = originalData;
+                displayCurrentPage();
+            })
+            .catch(err => console.error("Lỗi:", err));
+    }
+
+    // --- LOGIC PHÂN TRANG ---
+    function displayCurrentPage() {
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+        const paginatedItems = currentFilteredList.slice(startIndex, endIndex);
+
+        renderTable(paginatedItems);
+        renderPaginationControls();
+        
+        document.getElementById("recordCount").innerText = `Hiển thị ${paginatedItems.length} / ${currentFilteredList.length} nhà cung cấp`;
+    }
+
+    function renderPaginationControls() {
+        const paginationContainer = document.getElementById("paginationControls");
+        paginationContainer.innerHTML = "";
+
+        const totalPages = Math.ceil(currentFilteredList.length / itemsPerPage);
+        if (totalPages <= 1) return;
+
+        // Nút Trước
+        let prevClass = currentPage === 1 ? "disabled" : "";
+        let prevHtml = `<li class="page-item ${prevClass}"><a class="page-link" onclick="changePage(${currentPage - 1})">&laquo;</a></li>`;
+        paginationContainer.insertAdjacentHTML('beforeend', prevHtml);
+
+        // Các số trang
+        for (let i = 1; i <= totalPages; i++) {
+            let activeClass = i === currentPage ? "active" : "";
+            let pageHtml = `<li class="page-item ${activeClass}"><a class="page-link" onclick="changePage(${i})">${i}</a></li>`;
+            paginationContainer.insertAdjacentHTML('beforeend', pageHtml);
+        }
+
+        // Nút Sau
+        let nextClass = currentPage === totalPages ? "disabled" : "";
+        let nextHtml = `<li class="page-item ${nextClass}"><a class="page-link" onclick="changePage(${currentPage + 1})">&raquo;</a></li>`;
+        paginationContainer.insertAdjacentHTML('beforeend', nextHtml);
+    }
+
+    function changePage(page) {
+        const totalPages = Math.ceil(currentFilteredList.length / itemsPerPage);
+        if (page < 1 || page > totalPages) return;
+        currentPage = page;
+        displayCurrentPage();
+    }
+
+    // --- RENDER TABLE ---
+    function renderTable(list) {
+        const tbody = document.getElementById("tableBody");
+        let html = "";
+        if (list.length === 0) {
+            html = '<tr><td colspan="7" class="text-center text-muted">Không tìm thấy dữ liệu</td></tr>';
+        } else {
+            list.forEach(ncc => {
+                let imgUrl = ncc.hinhAnh ? (PHOTO_URL + ncc.hinhAnh) : "https://via.placeholder.com/50x50?text=Logo";
+                let nccString = JSON.stringify(ncc).replace(/'/g, "&#39;").replace(/"/g, "&quot;");
+                html += `
+                    <tr>
+                        <td class="text-center"><img src="${imgUrl}" class="supplier-logo"></td>
+                        <td>${ncc.maNCC}</td>
+                        <td class="fw-bold text-primary">${ncc.tenNCC}</td>
+                        <td>${ncc.sdt || ''}</td>
+                        <td>${ncc.email || ''}</td>
+                        <td>${ncc.diaChi || ''}</td>
+                        <td class="text-center action-col">
+                            <button class="btn btn-sm btn-warning" onclick='openEditModal(${nccString})'><i class="bi bi-pencil"></i></button>
+                            <button class="btn btn-sm btn-danger ms-1" onclick="openDeleteModal('${ncc.maNCC}')"><i class="bi bi-trash"></i></button>
+                        </td>
+                    </tr>`;
+            });
+        }
+        tbody.innerHTML = html;
+    }
+
+    // --- TÌM KIẾM & LỌC ---
+    function searchSuppliers() {
+        const keyword = document.getElementById("searchInput").value.toLowerCase().trim();
+        toggleClearBtn();
+        sortSuppliers(keyword); // Gọi hàm sắp xếp/lọc chung
+    }
+
+    function sortSuppliers(keyword = "") {
+        if(!keyword) keyword = document.getElementById("searchInput").value.toLowerCase().trim();
+        const sortType = document.getElementById("sortFilter").value;
+
+        let filtered = [...originalData];
+
+        // Lọc Keyword
+        if (keyword) {
+            filtered = filtered.filter(item => 
+                item.tenNCC.toLowerCase().includes(keyword) || 
+                item.maNCC.toLowerCase().includes(keyword) || 
+                (item.diaChi && item.diaChi.toLowerCase().includes(keyword))
+            );
+        }
+
+        // Sắp xếp
+        if (sortType === 'newest') {
+            filtered.sort((a, b) => new Date(b.ngayTao) - new Date(a.ngayTao));
+        } else {
+            filtered.sort((a, b) => new Date(a.ngayTao) - new Date(b.ngayTao));
+        }
+
+        currentFilteredList = filtered;
+        currentPage = 1; // Reset trang
+        displayCurrentPage();
+    }
+
+    function toggleClearBtn() {
+        const val = document.getElementById("searchInput").value;
+        const btn = document.getElementById("btnClearSearch");
+        if (val.trim().length > 0) btn.classList.remove("d-none"); else btn.classList.add("d-none");
+    }
+
+    function clearSearch() {
+        document.getElementById("searchInput").value = "";
+        document.getElementById("searchInput").focus();
+        toggleClearBtn();
+        sortSuppliers();
+    }
+
+    function refreshList() {
+        document.getElementById("searchInput").value = "";
+        document.getElementById("sortFilter").value = "newest";
+        toggleClearBtn();
+        loadSuppliers();
+    }
+
+    // --- CRUD ---
+    function validateForm() {
+        const ten = document.getElementById('tenNCC').value.trim();
+        const sdt = document.getElementById('sdt').value.trim();
+        const email = document.getElementById('email').value.trim();
+        const diaChi = document.getElementById('diaChi').value.trim();
+        
+        if (!ten || !sdt || !email || !diaChi) {
+            alert("Vui lòng nhập đầy đủ thông tin!"); return false;
+        }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            alert("Email không đúng định dạng!"); return false;
+        }
+        if (!/^\d{10}$/.test(sdt)) {
+            alert("Số điện thoại phải gồm 10 chữ số!"); return false;
+        }
+        return true;
+    }
+
+    function uploadAnh(input) {
+        if (input.files && input.files[0]) {
+            var formData = new FormData();
+            formData.append("file", input.files[0]);
+            fetch(`${BASE_URL}/upload?folder=nhacungcap`, { method: 'POST', body: formData })
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById('previewImg').src = data.url;
+                    document.getElementById('previewContainer').style.display = 'block';
+                    document.getElementById('hinhAnhDB').value = data.fileName;
+                })
+                .catch(err => alert("Lỗi upload: " + err));
+        }
+    }
+
+    function openAddModal() {
+        document.getElementById('modalTitle').innerText = "Thêm Nhà cung cấp";
+        document.getElementById('supplierForm').reset();
+        document.getElementById('maNCC').value = "Đang tạo mã...";
+        
+        fetch(`${BASE_URL}/nhacungcap/next-id`)
+            .then(res => res.text())
+            .then(id => document.getElementById('maNCC').value = id)
+            .catch(err => document.getElementById('maNCC').value = "Lỗi");
+
+        document.getElementById('maNCC').disabled = true;
+        document.getElementById('previewContainer').style.display = 'none';
+        document.getElementById('hinhAnhDB').value = "";
+        document.getElementById('ngayTao').value = new Date().toISOString().slice(0, 19).replace('T', ' ');
+        document.getElementById('divNgaySua').style.display = 'none';
+        
+        isEditMode = false;
+        supplierModal.show();
+    }
+
+    function openEditModal(ncc) {
+        document.getElementById('modalTitle').innerText = "Cập nhật Nhà cung cấp";
+        document.getElementById('maNCC').value = ncc.maNCC;
+        document.getElementById('maNCC').disabled = true;
+        document.getElementById('tenNCC').value = ncc.tenNCC;
+        document.getElementById('sdt').value = ncc.sdt || "";
+        document.getElementById('email').value = ncc.email || "";
+        document.getElementById('diaChi').value = ncc.diaChi || "";
+        
+        if(ncc.hinhAnh) {
+            document.getElementById('previewImg').src = PHOTO_URL + ncc.hinhAnh;
+            document.getElementById('previewContainer').style.display = 'block';
+            document.getElementById('hinhAnhDB').value = ncc.hinhAnh;
+        } else {
+            document.getElementById('previewContainer').style.display = 'none';
+            document.getElementById('hinhAnhDB').value = "";
+        }
+
+        document.getElementById('ngayTao').value = ncc.ngayTao ? ncc.ngayTao.replace('T', ' ').slice(0,19) : "";
+        document.getElementById('divNgaySua').style.display = 'block';
+        document.getElementById('ngaySua').value = new Date().toISOString().slice(0, 19).replace('T', ' ');
+
+        isEditMode = true;
+        supplierModal.show();
+    }
+
+    function saveSupplier() {
+        if (!validateForm()) return; 
+
+        const ma = document.getElementById('maNCC').value.trim();
+        const data = {
+            maNCC: ma,
+            tenNCC: document.getElementById('tenNCC').value.trim(),
+            sdt: document.getElementById('sdt').value.trim(),
+            email: document.getElementById('email').value.trim(),
+            diaChi: document.getElementById('diaChi').value.trim(),
+            hinhAnh: document.getElementById('hinhAnhDB').value
+        };
+
+        const method = isEditMode ? 'PUT' : 'POST';
+        const url = isEditMode ? `${BASE_URL}/nhacungcap/${ma}` : `${BASE_URL}/nhacungcap`;
+
+        fetch(url, {
+            method: method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        })
+        .then(async res => {
+            if(!res.ok) throw new Error(await res.text());
+            return res.json();
+        })
+        .then(() => {
+            alert(isEditMode ? "Cập nhật thành công!" : "Thêm mới thành công!");
+            supplierModal.hide();
+            loadSuppliers();
+        })
+        .catch(err => alert("Lỗi: " + err.message));
+    }
+
+    function openDeleteModal(id) {
+        document.getElementById('deleteSupplierId').innerText = id;
+        currentDeleteId = id;
+        deleteModal.show();
+    }
+
+    function confirmDelete() {
+        if(!currentDeleteId) return;
+        fetch(`${BASE_URL}/nhacungcap/${currentDeleteId}`, { method: 'DELETE' })
+        .then(async res => {
+            if(res.ok) {
+                alert("Xóa thành công!");
+                deleteModal.hide();
+                loadSuppliers();
+            } else {
+                alert("Không thể xóa (có thể do ràng buộc dữ liệu)!");
+            }
+        })
+        .catch(err => console.error(err));
+    }
+
+    // --- UTILS ---
+    function showUserProfile() {
+        document.getElementById('profileId').innerText = currentUser.maTaiKhoan;
+        document.getElementById('profileName').innerText = currentUser.hoVaTen || currentUser.tenDangNhap;
+        document.getElementById('profileEmail').innerText = currentUser.email || "Chưa cập nhật";
+        document.getElementById('profilePhone').innerText = currentUser.sdt || "Chưa cập nhật";
+        document.getElementById('profileAvatar').src = currentUser.hinhAnh ? (AVATAR_URL + currentUser.hinhAnh) : "assets/img/profile-img.jpg";
+        userProfileModal.show();
+    }
+    function openSettingsModal() {
+        document.getElementById("darkModeSwitch").checked = localStorage.getItem("darkMode") === "true";
+        document.getElementById("fontSizeRange").value = localStorage.getItem("fontSize") || "14";
+        settingsModal.show();
+    }
+    function toggleDarkMode() {
+        const check = document.getElementById("darkModeSwitch").checked;
+        if(check) { document.body.classList.add("dark-mode"); localStorage.setItem("darkMode", "true"); } 
+        else { document.body.classList.remove("dark-mode"); localStorage.setItem("darkMode", "false"); }
+    }
+    function changeFontSize(val) {
+        document.documentElement.style.fontSize = val + "px"; document.body.style.fontSize = val + "px"; 
+        localStorage.setItem("fontSize", val);
+    }
+    function applySavedSettings() {
+        if(localStorage.getItem("darkMode") === "true") document.body.classList.add("dark-mode");
+        const savedSize = localStorage.getItem("fontSize");
+        if(savedSize) document.body.style.fontSize = savedSize + "px";
+    }
+    function logout() {
+        if(confirm("Bạn có chắc chắn muốn đăng xuất?")) { localStorage.removeItem("currentUser"); window.location.href = "login.html"; }
+    }
+  </script>
+
+</body>
+</html>

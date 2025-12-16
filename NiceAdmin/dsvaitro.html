@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <title>Danh sách Vai trò - Smart Zone</title>
+  
+  <link href="assets/img/favicon.png" rel="icon">
+  <link href="assets/img/apple-touch-icon.png" rel="apple-touch-icon">
+  
+  <link href="https://fonts.gstatic.com" rel="preconnect">
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Nunito:300,300i,400,400i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i" rel="stylesheet">
+  
+  <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+  <link href="assets/vendor/boxicons/css/boxicons.min.css" rel="stylesheet">
+  <link href="assets/vendor/simple-datatables/style.css" rel="stylesheet">
+  <link href="assets/css/style.css" rel="stylesheet">
+
+  <style>
+    /* --- CSS CHUNG --- */
+    .pagination-info { color: #6c757d; font-size: 0.9rem; }
+    .table th { white-space: nowrap; vertical-align: middle; font-weight: 600; }
+    .table td { vertical-align: middle; }
+    .action-col { white-space: nowrap; width: 100px; text-align: center; }
+    
+    #headerAvatar { width: 36px; height: 36px; object-fit: cover; border-radius: 50%; border: 1px solid #e0e0e0; }
+    #profileAvatar { object-fit: cover; border: 3px solid #0d6efd; }
+
+    /* Search Bar */
+    .search-bar { min-width: 360px; padding: 0 20px; }
+    .search-form { width: 100%; border: 1px solid rgba(1, 41, 112, 0.2); padding: 0px 10px; border-radius: 4px; display: flex; align-items: center; background-color: #fff; transition: 0.3s; }
+    .search-form:focus-within { border-color: #0d6efd; box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.1); }
+    .search-form input { border: none !important; outline: none !important; box-shadow: none !important; padding: 4px 8px; width: 100%; background: transparent; color: #012970; font-size: 14px; }
+    .search-form button[title="Search"] { border: 0; padding: 0; margin-left: 8px; background: transparent; color: #012970; display: flex; align-items: center; }
+    #btnClearSearch { border: none; background: transparent; color: #dc3545; font-size: 10px; padding: 0 5px; display: flex; align-items: center; cursor: pointer; transition: 0.2s; }
+    
+    /* Pagination */
+    .pagination .page-item.active .page-link { background-color: #0d6efd; border-color: #0d6efd; }
+    .pagination .page-link { color: #012970; cursor: pointer; }
+    .pagination .page-item.disabled .page-link { color: #6c757d; }
+
+    /* Dark Mode */
+    body.dark-mode { background-color: #1a1a2e; color: #e0e0e0; }
+    body.dark-mode .header { background-color: #16213e; box-shadow: 0px 2px 20px rgba(0, 0, 0, 0.4); }
+    body.dark-mode .sidebar, body.dark-mode .card, body.dark-mode .modal-content { background-color: #16213e; color: #fff; border-color: #2c3e50; }
+    body.dark-mode .form-control, body.dark-mode .form-select { background-color: #0f3460; border-color: #2c3e50; color: #fff; }
+    body.dark-mode .table { color: #e0e0e0; border-color: #2c3e50; }
+    body.dark-mode .table-light th { background-color: #0f3460; color: #fff; border-color: #2c3e50; }
+    body.dark-mode .table-hover tbody tr:hover { color: #fff; background-color: #2c3e50; }
+    body.dark-mode .search-form { background-color: #16213e; border-color: #555; }
+    body.dark-mode .search-form input { color: #fff; }
+    body.dark-mode .search-form button { color: #fff; }
+    body.dark-mode .nav-link.collapsed { color: #e0e0e0; background: transparent; }
+    body.dark-mode .dropdown-menu { background-color: #16213e; border: 1px solid #444; }
+    body.dark-mode .dropdown-item { color: #e0e0e0; }
+    body.dark-mode .dropdown-item:hover { background-color: #0f3460; }
+    body.dark-mode .pagination .page-link { background-color: #16213e; border-color: #2c3e50; color: #e0e0e0; }
+    body.dark-mode .pagination .page-item.active .page-link { background-color: #0d6efd; border-color: #0d6efd; color: #fff; }
+  </style>
+</head>
+
+<body>
+
+  <header id="header" class="header fixed-top d-flex align-items-center">
+    <div class="d-flex align-items-center justify-content-between">
+      <a href="index.html" class="logo d-flex align-items-center">
+        <img src="assets/img/logo.png" alt="">
+        <span class="d-none d-lg-block">Smart Zone</span>
+      </a>
+      <i class="bi bi-list toggle-sidebar-btn"></i>
+    </div>
+
+    <div class="search-bar">
+      <form class="search-form" onsubmit="event.preventDefault(); searchRoles();">
+        <input type="text" id="searchInput" name="query" placeholder="Tìm kiếm..." title="Enter search keyword" oninput="toggleClearBtn()">
+        <button type="button" id="btnClearSearch" class="d-none" onclick="clearSearch()" title="Xóa tìm kiếm">
+            <i class="bi bi-x-lg"></i>
+        </button>
+        <button type="button" onclick="searchRoles()" title="Search">
+            <i class="bi bi-search"></i>
+        </button>
+      </form>
+    </div>
+
+    <nav class="header-nav ms-auto">
+      <ul class="d-flex align-items-center">
+        <li class="nav-item d-block d-lg-none"><a class="nav-link nav-icon search-bar-toggle " href="#"><i class="bi bi-search"></i></a></li>
+        <li class="nav-item dropdown pe-3">
+          <a class="nav-link nav-profile d-flex align-items-center pe-0" href="#" data-bs-toggle="dropdown">
+            <img src="assets/img/profile-img.jpg" alt="Profile" class="rounded-circle" id="headerAvatar">
+            <span class="d-none d-md-block dropdown-toggle ps-2" id="headerName">Admin</span>
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow profile">
+             <li class="dropdown-header"><h6 id="headerFullName">Quản trị viên</h6><span id="headerRole">Quản lý kho</span></li>
+             <li><hr class="dropdown-divider"></li>
+             <li><a class="dropdown-item d-flex align-items-center" href="#" onclick="showUserProfile()"><i class="bi bi-person"></i><span>Hồ sơ của bạn</span></a></li>
+             <li><hr class="dropdown-divider"></li>
+             <li><a class="dropdown-item d-flex align-items-center" href="#" onclick="openSettingsModal()"><i class="bi bi-gear"></i><span>Cài đặt hiển thị</span></a></li>
+             <li><hr class="dropdown-divider"></li>
+             <li><a class="dropdown-item d-flex align-items-center" href="#" onclick="logout()"><i class="bi bi-box-arrow-right"></i><span>Đăng xuất</span></a></li>
+          </ul>
+        </li>
+      </ul>
+    </nav>
+  </header>
+
+  <aside id="sidebar" class="sidebar">
+    <ul class="sidebar-nav" id="sidebar-nav">
+      
+      <li class="nav-item" id="menu-thongke">
+        <a class="nav-link collapsed" href="index.html">
+            <i class="bi bi-grid"></i><span>Thống kê</span>
+        </a>
+      </li>
+
+      <li class="nav-item" id="menu-hanghoa">
+        <a class="nav-link collapsed" data-bs-target="#hanghoa-nav" data-bs-toggle="collapse" href="#">
+            <i class="bi bi-box-seam"></i><span>Quản lý Hàng hóa</span><i class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="hanghoa-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
+            <li><a href="dsdanhmuc.html"><i class="bi bi-circle"></i>Danh sách Danh mục</a></li>
+            <li><a href="dssanpham.html"><i class="bi bi-circle"></i>Danh sách Sản phẩm</a></li>
+        </ul>
+      </li>
+      
+      <li class="nav-item" id="menu-kho">
+        <a class="nav-link collapsed" data-bs-target="#kho-nav" data-bs-toggle="collapse" href="#">
+          <i class="bi bi-house-door"></i><span>Quản lý Kho hàng</span><i class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="kho-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
+          <li><a href="dsphieunhap.html">Danh sách Phiếu Nhập</a></li>
+          <li><a href="dsphieuxuat.html">Danh sách Phiếu Xuất</a></li>
+          <li><a href="tonkho.html">Thống kê Tồn kho</a></li>
+        </ul>
+      </li>
+
+      <li class="nav-item" id="menu-donhang">
+          <a class="nav-link collapsed" href="dsdonhang.html">
+              <i class="bi bi-cart-check"></i><span>Quản lý Đơn hàng</span>
+          </a>
+      </li>
+
+      <li class="nav-item" id="menu-khachhang">
+          <a class="nav-link collapsed" href="dskhachhang.html">
+              <i class="bi bi-people"></i><span>Quản lý Khách hàng</span>
+          </a>
+      </li>
+      
+      <li class="nav-item" id="menu-ncc">
+          <a class="nav-link collapsed" href="dsnhacungcap.html">
+              <i class="bi bi-truck"></i><span>Quản lý Nhà cung cấp</span>
+          </a>
+      </li>
+      
+      <li class="nav-item" id="menu-account">
+          <a class="nav-link collapsed" href="dsnguoidung.html">
+              <i class="bi bi-person-gear"></i><span id="label-account">Quản lý Tài khoản</span>
+          </a>
+      </li>
+
+      <li class="nav-item" id="menu-role">
+          <a class="nav-link active" href="dsvaitro.html">
+              <i class="bi bi-shield-lock"></i><span>Quản lý Vai trò</span>
+          </a>
+      </li>
+
+    </ul>
+  </aside>
+
+  <main id="main" class="main">
+
+    <div class="pagetitle">
+      <h1>Danh sách Vai trò</h1>
+      <nav>
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="index.html">Trang chủ</a></li>
+          <li class="breadcrumb-item">Quản lý Tài khoản</li>
+          <li class="breadcrumb-item active">Danh sách Vai trò</li>
+        </ol>
+      </nav>
+    </div>
+
+    <section class="section">
+      <div class="row">
+        <div class="col-lg-12">
+          <div class="card">
+            <div class="card-body">
+              
+              <div class="d-flex justify-content-between align-items-center mb-3 mt-3">
+                  <h5 class="card-title p-0 m-0">Bảng phân quyền</h5>
+                  <button class="btn btn-primary btn-sm" onclick="openAddModal()">
+                      <i class="bi bi-plus-circle me-1"></i> Thêm Vai trò
+                  </button>
+              </div>
+
+              <div class="table-responsive">
+                  <table class="table table-hover table-bordered">
+                    <thead class="table-light">
+                      <tr>
+                        <th scope="col" style="width: 50px;" class="text-center">STT</th>
+                        <th scope="col">Mã Vai trò (PK)</th>
+                        <th scope="col">Tên Vai trò</th>
+                        <th scope="col" class="action-col">Tác vụ</th>
+                      </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        </tbody>
+                  </table>
+              </div>
+
+              <div class="d-flex justify-content-between align-items-center mt-4">
+                  <div class="pagination-info" id="recordCount"></div>
+                  <nav aria-label="Page navigation">
+                    <ul class="pagination justify-content-end mb-0" id="paginationControls"></ul>
+                  </nav>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <div class="modal fade" id="roleModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalTitle">Thêm Vai trò mới</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="roleForm">
+            <div class="mb-3">
+              <label for="maVaiTro" class="form-label">Mã Vai trò <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" id="maVaiTro" placeholder="VD: VT04" required>
+              <div class="form-text text-muted">Mã này là duy nhất.</div>
+            </div>
+            <div class="mb-3">
+              <label for="tenVaiTro" class="form-label">Tên Vai trò <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" id="tenVaiTro" placeholder="VD: Quản lý cửa hàng" required>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+          <button type="button" class="btn btn-primary" onclick="saveRole()">Lưu lại</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title text-danger">Xác nhận xóa</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          Bạn có chắc chắn muốn xóa vai trò <strong id="deleteRoleId"></strong>?
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+          <button type="button" class="btn btn-danger" onclick="confirmDelete()">Xóa ngay</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="userProfileModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Hồ sơ của bạn</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body text-center"><img src="" id="profileAvatar" class="rounded-circle mb-3" style="width: 100px; height: 100px; object-fit: cover; border: 3px solid #0d6efd;"><h4 id="profileName" class="fw-bold"></h4><p id="profileRole" class="text-muted mb-3"></p><div class="text-start px-3"><p><strong>Mã TK:</strong> <span id="profileId"></span></p><p><strong>Email:</strong> <span id="profileEmail"></span></p><p><strong>SĐT:</strong> <span id="profilePhone"></span></p></div></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button></div></div></div></div>
+  <div class="modal fade" id="settingsModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Cài đặt hiển thị</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="d-flex justify-content-between align-items-center mb-4"><div><h6 class="mb-0 fw-bold">Chế độ tối</h6></div><div class="form-check form-switch"><input class="form-check-input" type="checkbox" id="darkModeSwitch" onchange="toggleDarkMode()"></div></div><hr><div class="mb-3"><h6 class="mb-2 fw-bold">Kích thước chữ</h6><input type="range" class="form-range" min="12" max="20" step="1" id="fontSizeRange" oninput="changeFontSize(this.value)"><div class="d-flex justify-content-between small"><span>Nhỏ</span><span id="fontSizeValue">14px</span><span>Lớn</span></div></div></div><div class="modal-footer"><button type="button" class="btn btn-primary" data-bs-dismiss="modal">Xong</button></div></div></div></div>
+
+  <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+
+  <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="assets/js/main.js"></script>
+
+  <script>
+      // 1. KHỞI TẠO & LOAD DỮ LIỆU
+      const currentUserStr = localStorage.getItem("currentUser");
+      if (!currentUserStr) window.location.href = "login.html";
+      const currentUser = JSON.parse(currentUserStr);
+      const PHOTO_BASE_URL = "http://localhost:8080/photos/";
+      const API_URL = "http://localhost:8080/api/vaitro"; 
+      const AVATAR_URL = "http://localhost:8080/photos/taikhoan/";
+
+      let originalRoles = []; 
+      let currentFilteredList = [];
+      
+      let currentPage = 1;
+      const itemsPerPage = 10;
+
+      var roleModal = new bootstrap.Modal(document.getElementById('roleModal'));
+      var deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+      var userProfileModal = new bootstrap.Modal(document.getElementById('userProfileModal'));
+      var settingsModal = new bootstrap.Modal(document.getElementById('settingsModal'));
+
+      var currentRoleId = null; 
+      var isEditMode = false;
+
+      document.addEventListener("DOMContentLoaded", function() {
+          setupHeader();
+          applyRolePermissions(); // Phân quyền trước
+          loadRoles();
+          applySavedSettings();
+      });
+
+      // --- HÀM PHÂN QUYỀN ---
+      function applyRolePermissions() {
+          const roleName = currentUser.vaiTro ? currentUser.vaiTro.tenVaiTro : "";
+          
+          const menuThongKe = document.getElementById("menu-thongke");
+          const menuHangHoa = document.getElementById("menu-hanghoa");
+          const menuKho = document.getElementById("menu-kho");
+          const menuDonHang = document.getElementById("menu-donhang");
+          const menuKhachHang = document.getElementById("menu-khachhang");
+          const menuNCC = document.getElementById("menu-ncc");
+          const menuAccount = document.getElementById("menu-account");
+          const menuRole = document.getElementById("menu-role");
+
+          // STAFF: Ẩn hết
+          if (roleName === "Staff" || roleName === "Nhân viên" || roleName === "Kho") {
+              if(menuThongKe) menuThongKe.style.display = "none";
+              if(menuNCC) menuNCC.style.display = "none";
+              if(menuAccount) menuAccount.style.display = "none";
+              if(menuRole) menuRole.style.display = "none";
+              // Chặn truy cập trực tiếp
+              document.body.innerHTML = "<h3 class='text-center mt-5 text-danger'>Bạn không có quyền truy cập trang này!</h3><p class='text-center'><a href='index.html'>Quay lại</a></p>";
+              return;
+          }
+          // LEADER: Ẩn hết
+          else if (roleName === "Leader" || roleName === "Trưởng nhóm" || roleName === "Quản lý") {
+              if(menuThongKe) menuThongKe.style.display = "none";
+              if(menuAccount) menuAccount.style.display = "none";
+              if(menuRole) menuRole.style.display = "none";
+              // Chặn truy cập trực tiếp
+              document.body.innerHTML = "<h3 class='text-center mt-5 text-danger'>Bạn không có quyền truy cập trang này!</h3><p class='text-center'><a href='index.html'>Quay lại</a></p>";
+              return;
+          }
+          // BOSS: Ẩn Vai trò (Không được vào đây)
+          else if (roleName === "Boss" || roleName === "Giám đốc") {
+              if(menuRole) menuRole.style.display = "none";
+              // Chặn truy cập trực tiếp
+              document.body.innerHTML = "<h3 class='text-center mt-5 text-danger'>Bạn không có quyền truy cập trang này!</h3><p class='text-center'><a href='index.html'>Quay lại</a></p>";
+              return;
+          }
+          // ADMIN: Full quyền
+          else if (roleName === "Admin" || roleName === "Quản trị viên") {
+              if(menuThongKe) menuThongKe.style.display = "none";
+              if(menuHangHoa) menuHangHoa.style.display = "none";
+              if(menuKho) menuKho.style.display = "none";
+              if(menuDonHang) menuDonHang.style.display = "none";
+              if(menuKhachHang) menuKhachHang.style.display = "none";
+              if(menuNCC) menuNCC.style.display = "none";
+              
+              if(menuAccount) menuAccount.style.display = "block";
+              if(menuRole) menuRole.style.display = "block";
+          }
+      }
+
+      function setupHeader() {
+          const avatarUrl = currentUser.hinhAnh ? (AVATAR_URL + currentUser.hinhAnh) : "assets/img/profile-img.jpg";
+          document.getElementById("headerName").innerText = currentUser.tenDangNhap;
+          document.getElementById("headerAvatar").src = avatarUrl;
+          document.getElementById("headerFullName").innerText = currentUser.hoVaTen || currentUser.tenDangNhap;
+          document.getElementById("headerRole").innerText = currentUser.vaiTro ? currentUser.vaiTro.tenVaiTro : "Nhân viên";
+          document.getElementById("profileAvatar").src = avatarUrl;
+      }
+
+      // --- LOAD DỮ LIỆU ---
+      function loadRoles() {
+          fetch(API_URL)
+              .then(response => response.json())
+              .then(data => {
+                  originalRoles = data;
+                  currentFilteredList = originalRoles;
+                  displayCurrentPage();
+              })
+              .catch(error => console.error('Lỗi:', error));
+      }
+
+      // --- PHÂN TRANG ---
+      function displayCurrentPage() {
+          const startIndex = (currentPage - 1) * itemsPerPage;
+          const endIndex = startIndex + itemsPerPage;
+          const paginatedItems = currentFilteredList.slice(startIndex, endIndex);
+
+          renderTable(paginatedItems);
+          renderPaginationControls();
+          
+          document.getElementById("recordCount").innerText = `Hiển thị ${paginatedItems.length} / ${currentFilteredList.length} vai trò`;
+      }
+
+      function renderPaginationControls() {
+          const paginationContainer = document.getElementById("paginationControls");
+          paginationContainer.innerHTML = "";
+
+          const totalPages = Math.ceil(currentFilteredList.length / itemsPerPage);
+          if (totalPages <= 1) return;
+
+          // Prev
+          let prevClass = currentPage === 1 ? "disabled" : "";
+          let prevHtml = `<li class="page-item ${prevClass}"><a class="page-link" onclick="changePage(${currentPage - 1})">&laquo;</a></li>`;
+          paginationContainer.insertAdjacentHTML('beforeend', prevHtml);
+
+          // Pages
+          for (let i = 1; i <= totalPages; i++) {
+              let activeClass = i === currentPage ? "active" : "";
+              let pageHtml = `<li class="page-item ${activeClass}"><a class="page-link" onclick="changePage(${i})">${i}</a></li>`;
+              paginationContainer.insertAdjacentHTML('beforeend', pageHtml);
+          }
+
+          // Next
+          let nextClass = currentPage === totalPages ? "disabled" : "";
+          let nextHtml = `<li class="page-item ${nextClass}"><a class="page-link" onclick="changePage(${currentPage + 1})">&raquo;</a></li>`;
+          paginationContainer.insertAdjacentHTML('beforeend', nextHtml);
+      }
+
+      function changePage(page) {
+          const totalPages = Math.ceil(currentFilteredList.length / itemsPerPage);
+          if (page < 1 || page > totalPages) return;
+          currentPage = page;
+          displayCurrentPage();
+      }
+
+      // --- RENDER TABLE ---
+      function renderTable(dataList) {
+          let tableBody = document.getElementById("tableBody");
+          let html = "";
+
+          if (dataList.length === 0) {
+               html = '<tr><td colspan="4" class="text-center text-muted">Không tìm thấy dữ liệu</td></tr>';
+          } else {
+              dataList.forEach((role, index) => {
+                  let badgeColor = ['bg-primary', 'bg-success', 'bg-danger', 'bg-warning text-dark', 'bg-info text-dark'][index % 5];
+                  html += `
+                    <tr>
+                      <td class="text-center">${(currentPage - 1) * itemsPerPage + index + 1}</td>
+                      <td><span class="badge ${badgeColor}">${role.maVaiTro}</span></td>
+                      <td>${role.tenVaiTro}</td>
+                      <td class="action-col">
+                          <button class="btn btn-warning btn-sm" onclick="openEditModal('${role.maVaiTro}', '${role.tenVaiTro}')"><i class="bi bi-pencil"></i></button>
+                          <button class="btn btn-danger btn-sm" onclick="openDeleteModal('${role.maVaiTro}')"><i class="bi bi-trash"></i></button> 
+                      </td>
+                    </tr>`;
+              });
+          }
+          tableBody.innerHTML = html;
+      }
+
+      // --- TÌM KIẾM ---
+      function searchRoles() {
+          let keyword = document.getElementById("searchInput").value.toLowerCase().trim();
+          toggleClearBtn();
+
+          if (!keyword) {
+              currentFilteredList = originalRoles;
+          } else {
+              currentFilteredList = originalRoles.filter(role => 
+                  role.maVaiTro.toLowerCase().includes(keyword) || 
+                  role.tenVaiTro.toLowerCase().includes(keyword)
+              );
+          }
+          currentPage = 1;
+          displayCurrentPage();
+      }
+
+      function toggleClearBtn() {
+          let inputVal = document.getElementById("searchInput").value;
+          let btn = document.getElementById("btnClearSearch");
+          if (inputVal.trim().length > 0) btn.classList.remove("d-none");
+          else {
+              btn.classList.add("d-none");
+              if(inputVal.length === 0) { currentFilteredList = originalRoles; displayCurrentPage(); }
+          }
+      }
+
+      function clearSearch() {
+          let input = document.getElementById("searchInput");
+          input.value = "";
+          input.focus();
+          toggleClearBtn();
+          currentFilteredList = originalRoles;
+          displayCurrentPage();
+      }
+
+      // --- CRUD ---
+      function openAddModal() {
+          document.getElementById('modalTitle').innerText = "Thêm Vai trò mới";
+          document.getElementById('roleForm').reset();
+          document.getElementById('maVaiTro').disabled = false; 
+          isEditMode = false;
+          roleModal.show();
+      }
+
+      function openEditModal(id, name) {
+          document.getElementById('modalTitle').innerText = "Cập nhật Vai trò";
+          document.getElementById('maVaiTro').value = id;
+          document.getElementById('tenVaiTro').value = name;
+          document.getElementById('maVaiTro').disabled = true;
+          isEditMode = true;
+          roleModal.show();
+      }
+
+      function saveRole() {
+          var ma = document.getElementById('maVaiTro').value.trim();
+          var ten = document.getElementById('tenVaiTro').value.trim();
+          if (!ma || !ten) { alert("Vui lòng nhập đủ thông tin!"); return; }
+
+          var roleData = { maVaiTro: ma, tenVaiTro: ten };
+          var method = isEditMode ? 'PUT' : 'POST';
+          var url = isEditMode ? `${API_URL}/${ma}` : API_URL;
+
+          fetch(url, {
+              method: method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(roleData)
+          }).then(async response => {
+              if (!response.ok) throw new Error(await response.text());
+              return response.json();
+          }).then(data => {
+              alert(isEditMode ? "Cập nhật thành công!" : "Thêm mới thành công!");
+              roleModal.hide();
+              loadRoles(); 
+          }).catch(error => alert("Lỗi: " + error.message));
+      }
+
+      function openDeleteModal(id) {
+          document.getElementById('deleteRoleId').innerText = id;
+          currentRoleId = id;
+          deleteModal.show();
+      }
+
+      function confirmDelete() {
+          if (!currentRoleId) return;
+          fetch(`${API_URL}/${currentRoleId}`, { method: 'DELETE' })
+          .then(async response => {
+              if (response.ok) {
+                  alert("Đã xóa thành công!");
+                  deleteModal.hide();
+                  loadRoles();
+              } else {
+                  alert("Lỗi khi xóa: " + await response.text());
+              }
+          }).catch(error => console.error(error));
+      }
+
+      // --- SETTINGS ---
+      function logout() {
+          if(confirm("Bạn có chắc chắn muốn đăng xuất?")) { localStorage.removeItem("currentUser"); window.location.href = "login.html"; }
+      }
+
+      function showUserProfile() {
+          document.getElementById('profileId').innerText = currentUser.maTaiKhoan;
+          document.getElementById('profileName').innerText = currentUser.hoVaTen || currentUser.tenDangNhap;
+          document.getElementById('profileEmail').innerText = currentUser.email || "Chưa cập nhật";
+          document.getElementById('profilePhone').innerText = currentUser.sdt || "Chưa cập nhật";
+          document.getElementById('profileAvatar').src = currentUser.hinhAnh ? (AVATAR_URL + currentUser.hinhAnh) : "assets/img/profile-img.jpg";
+          userProfileModal.show();
+      }
+
+      function openSettingsModal() {
+          document.getElementById("darkModeSwitch").checked = localStorage.getItem("darkMode") === "true";
+          document.getElementById("fontSizeRange").value = localStorage.getItem("fontSize") || "14";
+          settingsModal.show();
+      }
+
+      function toggleDarkMode() {
+          const isChecked = document.getElementById("darkModeSwitch").checked;
+          if(isChecked) { document.body.classList.add("dark-mode"); localStorage.setItem("darkMode", "true"); }
+          else { document.body.classList.remove("dark-mode"); localStorage.setItem("darkMode", "false"); }
+      }
+
+      function changeFontSize(val) {
+          document.documentElement.style.fontSize = val + "px"; document.body.style.fontSize = val + "px";
+          localStorage.setItem("fontSize", val);
+      }
+
+      function applySavedSettings() {
+          if(localStorage.getItem("darkMode") === "true") document.body.classList.add("dark-mode");
+          const savedSize = localStorage.getItem("fontSize");
+          if(savedSize) document.body.style.fontSize = savedSize + "px";
+      }
+  </script>
+
+</body>
+</html>
